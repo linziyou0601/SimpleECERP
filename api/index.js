@@ -4,6 +4,7 @@ import express from 'express'
 import { getJWT } from './jwt'
 import prisma from './prismaClient'
 import merchandise from './route/merchandise'
+import adjustment from './route/adjustment'
 import purchase from './route/purchase'
 import sale from './route/sale'
 
@@ -14,6 +15,7 @@ app.use(express.json())
 app.use(csrf({ cookie: true }))
 
 app.use('/merchandise', merchandise)
+app.use('/merchandise/adjustment', adjustment)
 app.use('/merchandise/purchase', purchase)
 app.use('/merchandise/sale', sale)
 

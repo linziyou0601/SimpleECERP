@@ -83,9 +83,9 @@ export default {
               to: '/merchandise/sale',
             },
             {
-              icon: 'mdi-shopping',
+              icon: 'mdi-drag-variant',
               title: '調整單',
-              to: '',
+              to: '/merchandise/adjustment',
             },
           ],
         },

@@ -36,6 +36,7 @@ model Merchandise {
     supplier    Supplier? @relation(fields: [supplierId], references: [id])
     supplierId  Int?
     inventory   Inventory[]
+    adjustment  Adjustment[]
     purchase    Purchase[]
     sale        Sale[]
     orderDetail OrderDetail[]
@@ -49,10 +50,24 @@ model Inventory {
     updatedAt     DateTime    @updatedAt
     merchandise   Merchandise @relation(fields: [merchandiseId], references: [id])
     merchandiseId Int
+    adjustment    Adjustment? @relation(fields: [adjustmentId], references: [id])
+    adjustmentId  Int?
     purchase      Purchase?   @relation(fields: [purchaseId], references: [id])
     purchaseId    Int?
     sale          Sale?       @relation(fields: [saleId], references: [id])
     saleId        Int?
+}
+
+model Adjustment {
+    id            Int         @id @default(autoincrement())
+    amount        Float
+    unitCost      Float
+    type          String      @default("amount")
+    createdAt     DateTime    @default(now())
+    updatedAt     DateTime    @updatedAt
+    merchandise   Merchandise @relation(fields: [merchandiseId], references: [id])
+    merchandiseId Int
+    inventory     Inventory?
 }
 
 model Purchase {
