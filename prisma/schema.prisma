@@ -1,0 +1,144 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+    id        Int      @id @default(autoincrement())
+    account   String   @unique
+    password  String
+    name      String
+    email     String   @unique
+    phone     String?  @unique
+    gender    String?
+    lineId    String?  @unique
+    birth     DateTime?
+    scope     String   @default("Customer")
+    token     String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    entryDetail Order[]
+}
+
+model Supplier {
+    id          Int      @id @default(autoincrement())
+    name        String   @unique
+    email       String?  @unique
+    phone       String?  @unique
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    merchandise Merchandise?
+}
+
+model Merchandise {
+    id          Int       @id @default(autoincrement())
+    title       String    @unique
+    unit        String    @default("個")
+    price       Float     @default(0)
+    on          Boolean   @default(true)
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    supplier    Supplier? @relation(fields: [supplierId], references: [id])
+    supplierId  Int?
+    inventory   Inventory[]
+    purchase    Purchase[]
+    sale        Sale[]
+    orderDetail OrderDetail[]
+}
+
+model Inventory {
+    id            Int         @id @default(autoincrement())
+    cost          Float       @default(0)
+    quantity      Int         @default(0)
+    createdAt     DateTime    @default(now())
+    updatedAt     DateTime    @updatedAt
+    merchandise   Merchandise @relation(fields: [merchandiseId], references: [id])
+    merchandiseId Int
+    purchase      Purchase?   @relation(fields: [purchaseId], references: [id])
+    purchaseId    Int?
+    sale          Sale?       @relation(fields: [saleId], references: [id])
+    saleId        Int?
+}
+
+model Purchase {
+    id            Int         @id @default(autoincrement())
+    amount        Float
+    unitCost      Float
+    type          String      @default("purchase")
+    createdAt     DateTime    @default(now())
+    updatedAt     DateTime    @updatedAt
+    merchandise   Merchandise @relation(fields: [merchandiseId], references: [id])
+    merchandiseId Int
+    inventory     Inventory?
+}
+
+model Sale {
+    id            Int         @id @default(autoincrement())
+    amount        Float
+    unitCost      Float
+    unitPrice     Float
+    type          String      @default("sale")
+    createdAt     DateTime    @default(now())
+    updatedAt     DateTime    @updatedAt
+    merchandise   Merchandise @relation(fields: [merchandiseId], references: [id])
+    merchandiseId Int
+    inventory     Inventory?
+}
+
+model Order {
+    id          Int      @id @default(autoincrement())
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    user        User @relation(fields: [userId], references: [id])
+    userId      Int
+    orderDetail OrderDetail[]
+}
+
+model OrderDetail {
+    id            Int         @id @default(autoincrement())
+    direction     String
+    amount        Float
+    createdAt     DateTime    @default(now())
+    updatedAt     DateTime    @updatedAt
+    order         Order       @relation(fields: [orderId], references: [id])
+    orderId       Int
+    merchandise   Merchandise @relation(fields: [merchandiseId], references: [id])
+    merchandiseId Int
+}
+
+model AccountingSubject {
+    id          Int      @id @default(autoincrement())
+    type        String
+    direction   String
+    title       String
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    entryDetail JournalEntryDetail[]
+}
+
+model JournalEntry {
+    id         Int      @id @default(autoincrement())
+    documentId String?  @unique
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+    entryDetail JournalEntryDetail[]
+}
+
+model JournalEntryDetail {
+    id        Int               @id @default(autoincrement())
+    direction String
+    amount    Float
+    createdAt DateTime          @default(now())
+    updatedAt DateTime          @updatedAt
+    subject   AccountingSubject @relation(fields: [subjectId], references: [id])
+    subjectId Int
+    entry     JournalEntry      @relation(fields: [entryId], references: [id])
+    entryId   Int
+}
