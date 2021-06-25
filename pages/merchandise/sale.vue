@@ -39,6 +39,46 @@
               <!-- 資料篩選區 -->
               <v-col cols="auto">
                 <v-row>
+                  <v-dialog
+                    ref="monthSelEl"
+                    v-model="monthSel"
+                    :return-value.sync="month"
+                    persistent
+                    width="290px"
+                  >
+                    <template #activator="{ on, attrs }">
+                      <v-subheader>月份</v-subheader>
+                      <v-text-field
+                        v-model="month"
+                        hide-details="true"
+                        class="max-w-100 pt-2"
+                        readonly
+                        v-bind="attrs"
+                        v-on="on"
+                      ></v-text-field>
+                    </template>
+                    <v-date-picker
+                      v-model="month"
+                      type="month"
+                      locale="zh-tw"
+                      scrollable
+                    >
+                      <v-spacer></v-spacer>
+                      <v-btn text color="primary" @click="monthSel = false"
+                        >取消</v-btn
+                      >
+                      <v-btn
+                        text
+                        color="primary"
+                        @click="$refs.monthSelEl.save(month)"
+                        >選擇</v-btn
+                      >
+                    </v-date-picker>
+                  </v-dialog>
+                </v-row>
+              </v-col>
+              <v-col cols="auto">
+                <v-row>
                   <v-subheader>品名</v-subheader>
                   <v-autocomplete
                     v-model="filter.merchandises"
@@ -208,7 +248,7 @@
       <v-card>
         <v-card-title class="text-h5">刪除</v-card-title>
         <v-card-text
-          >確定要刪除這筆紀錄？<br />註：此筆進貨資料之後有其他進銷存資料，將不允許刪除</v-card-text
+          >確定要刪除這筆紀錄？<br />註：此筆銷貨資料之後有其他進銷存資料，將不允許刪除</v-card-text
         >
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -222,7 +262,7 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters, mapActions, mapMutations } from 'vuex'
 export default {
   data() {
     return {
@@ -287,6 +327,22 @@ export default {
   computed: {
     ...mapGetters('sale', ['allSales', 'loadingSale']),
     ...mapGetters('merchandise', ['allMerchandises']),
+    month: {
+      get() {
+        return this.$store.state.purchase.month
+      },
+      set(val) {
+        this.setMonth(val)
+      },
+    },
+    monthSel: {
+      get() {
+        return this.$store.state.purchase.monthSel
+      },
+      set(val) {
+        this.setMonthSel(val)
+      },
+    },
   },
   created() {
     this.getAllMerchandises()
@@ -301,6 +357,7 @@ export default {
       'deleteSale',
     ]),
     ...mapActions('merchandise', ['getAllMerchandises']),
+    ...mapMutations('purchase', ['setMonth', 'setMonthSel']),
     // 資料顯示
     typeColor(type, text = false) {
       return (

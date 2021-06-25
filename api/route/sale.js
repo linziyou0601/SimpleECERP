@@ -87,9 +87,8 @@ router.put('/', jwtMiddleware, async (req, res) => {
       const oldData = await prisma.sale.findFirst({
         where: { id: data.id },
       })
-      const inv = data.inventory
       const diffAmount = data.amount - oldData.amount
-      const diffCostOfGoodsSold = (inv.cost / inv.quantity) * diffAmount
+      const diffCostOfGoodsSold = oldData.unitCost * diffAmount
       const saleUpdate = await prisma.sale.update({
         where: { id: data.id },
         data: {
@@ -107,7 +106,7 @@ router.put('/', jwtMiddleware, async (req, res) => {
       result = saleUpdate
     } else {
       message = 'failed'
-      result = '操作不允許，此筆進貨資料之後有其他進銷存資料'
+      result = '操作不允許，此筆調整資料之後有其他進銷存資料'
     }
   } catch (exception) {
     message = 'failed'
@@ -140,7 +139,7 @@ router.delete('/', jwtMiddleware, async (req, res) => {
       result = transaction
     } else {
       message = 'failed'
-      result = '操作不允許，此筆進貨資料之後有其他進銷存資料'
+      result = '操作不允許，此筆調整資料之後有其他進銷存資料'
     }
   } catch (exception) {
     message = 'failed'

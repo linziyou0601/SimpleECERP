@@ -46,8 +46,8 @@ router.post('/', jwtMiddleware, async (req, res) => {
       where: { merchandiseId: data.merchandiseId },
       orderBy: { createdAt: 'desc' },
     })
-    const newQty = inv.quantity + (data.type !== 'discount' ? data.amount : 0)
-    const newCost = (inv.cost + data.unitCost * data.amount)
+    const diffAmount = (data.type !== 'discount' ? data.amount : 0)
+    const diffCost = data.unitCost * data.amount
     const purchaseCreate = await prisma.purchase.create({
       data: {
         amount: data.amount,
@@ -56,8 +56,8 @@ router.post('/', jwtMiddleware, async (req, res) => {
         type: data.type,
         inventory: {
           create: {
-            cost: newCost,
-            quantity: newQty,
+            cost: inv.cost + diffCost,
+            quantity: inv.quantity + diffAmount,
             merchandiseId: data.merchandiseId,
           },
         },
@@ -87,9 +87,8 @@ router.put('/', jwtMiddleware, async (req, res) => {
       const oldData = await prisma.purchase.findFirst({
         where: { id: data.id },
       })
-      const inv = data.inventory
-      const newQty = inv.quantity + (data.type !== 'discount' ? data.amount - oldData.amount : 0)
-      const newCost = inv.cost - oldData.unitCost * oldData.amount + data.unitCost * data.amount
+      const diffAmount = (data.type !== 'discount' ? data.amount - oldData.amount : 0)
+      const diffCost = data.unitCost * data.amount - oldData.unitCost * oldData.amount
       const purchaseUpdate = await prisma.purchase.update({
         where: { id: data.id },
         data: {
@@ -97,8 +96,8 @@ router.put('/', jwtMiddleware, async (req, res) => {
           unitCost: data.unitCost,
           inventory: {
             update: {
-              cost: newCost,
-              quantity: newQty,
+              cost: { increment: diffCost },
+              quantity: { increment: diffAmount },
             },
           },
         },

@@ -1,6 +1,8 @@
 const state = () => ({
   _allSales: [],
   _loadingSale: false,
+  month: new Date().toISOString().substr(0, 7),
+  monthSel: false,
 })
 
 const getters = {
@@ -77,6 +79,12 @@ const mutations = {
   },
   setLoadingSale(state, value) {
     state._loadingSale = value
+  },
+  setMonth(state, value) {
+    state.month = value
+  },
+  setMonthSel(state, value) {
+    state.monthSel = value
   },
 }
 

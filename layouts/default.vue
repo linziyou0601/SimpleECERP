@@ -55,6 +55,9 @@ export default {
 .max-w-100 {
   max-width: 100px;
 }
+.max-w-200 {
+  max-width: 200px;
+}
 .max-w-300 {
   max-width: 300px;
 }
