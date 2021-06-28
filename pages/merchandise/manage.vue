@@ -138,7 +138,7 @@
                   v-model.trim="editingMerchandise.title"
                   label="品名*"
                   type="text"
-                  :rules="[() => !!editingMerchandise.title || '品名不能為空']"
+                  :rules="[rules.validNullString]"
                   required
                 ></v-text-field>
               </v-col>
@@ -147,7 +147,7 @@
                   v-model.trim="editingMerchandise.unit"
                   label="單位*"
                   type="text"
-                  :rules="[() => !!editingMerchandise.unit || '單位不能為空']"
+                  :rules="[rules.validNullString]"
                   required
                 ></v-text-field>
               </v-col>
@@ -156,9 +156,7 @@
                   v-model.number="editingMerchandise.price"
                   label="價格*"
                   type="number"
-                  :rules="[
-                    () => editingMerchandise.price > 0 || '價格須大於零',
-                  ]"
+                  :rules="[rules.validNumber]"
                   required
                 ></v-text-field>
               </v-col>
@@ -248,6 +246,10 @@ export default {
         ons: [],
       },
       // 編輯資料表內容
+      rules: {
+        validNumber: (v) => v > 0 || '必須大於0',
+        validNullString: (v) => !!v || '不能為空',
+      },
       defaultDialog: false,
       deleteDialog: false,
       defaultMerchandise: {
