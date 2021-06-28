@@ -8,6 +8,7 @@ import merchandise from './route/merchandise'
 import adjustment from './route/adjustment'
 import purchase from './route/purchase'
 import sale from './route/sale'
+import order from './route/order'
 import user from './route/user'
 
 const app = express()
@@ -20,6 +21,7 @@ app.use('/merchandise', merchandise)
 app.use('/merchandise/adjustment', adjustment)
 app.use('/merchandise/purchase', purchase)
 app.use('/merchandise/sale', sale)
+app.use('/order', order)
 app.use('/user', user)
 
 app.get('/csrf', function (req, res) {

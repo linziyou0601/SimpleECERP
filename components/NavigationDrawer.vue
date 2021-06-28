@@ -90,16 +90,14 @@ export default {
           ],
         },
         {
+          icon: 'mdi-file-document-edit',
+          title: '訂單管理',
+          to: '/order',
+        },
+        {
           icon: 'mdi-account-multiple',
-          title: '會員',
-          prefix: '/user',
-          subitems: [
-            {
-              icon: 'mdi-account-cog',
-              title: '會員管理',
-              to: '/user/manage',
-            },
-          ],
+          title: '會員管理',
+          to: '/user',
         },
         {
           icon: 'mdi-chart-bubble',
