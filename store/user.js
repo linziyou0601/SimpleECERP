@@ -22,7 +22,7 @@ const actions = {
   processError({ commit, dispatch }, code) {
     if (code === 401 || code === 403) {
       commit('fireUnAuthAlertDialog', null, { root: true })
-      dispatch('logout', 'user-manage', { root: true })
+      dispatch('logout', 'user', { root: true })
     }
   },
   getAllUsers({ commit, dispatch }) {

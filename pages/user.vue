@@ -137,7 +137,7 @@
                   :disabled="userIndex > -1"
                   label="帳號*"
                   type="text"
-                  :rules="[validNullString]"
+                  :rules="[rules.validNullString]"
                   required
                 ></v-text-field>
               </v-col>
@@ -146,7 +146,7 @@
                   v-if="userIndex === -1"
                   v-model.trim="editingUser.password"
                   label="新密碼*"
-                  :rules="[validNullString]"
+                  :rules="[rules.validNullString]"
                   type="password"
                 ></v-text-field>
               </v-col>
@@ -155,7 +155,7 @@
                   v-if="userIndex === -1"
                   v-model.trim="editingUser.passwordConfirm"
                   label="確認密碼*"
-                  :rules="[validNullString]"
+                  :rules="[rules.validNullString]"
                   type="password"
                 ></v-text-field>
               </v-col>
@@ -164,7 +164,7 @@
                   v-model.trim="editingUser.name"
                   label="姓名*"
                   type="text"
-                  :rules="[() => !!editingUser.name || '姓名不能為空']"
+                  :rules="[rules.validNullString]"
                   required
                 ></v-text-field>
               </v-col>
@@ -172,7 +172,7 @@
                 <v-text-field
                   v-model.trim="editingUser.email"
                   label="信箱*"
-                  :rules="[validNullString]"
+                  :rules="[rules.validNullString]"
                   type="text"
                 ></v-text-field>
               </v-col>
@@ -263,9 +263,7 @@
     <v-dialog v-model="deleteDialog" max-width="500px">
       <v-card>
         <v-card-title class="text-h5">刪除</v-card-title>
-        <v-card-text
-          >確定要刪除這個商品？<br />註：若該商品有進銷存等相關紀錄，請以下架取代刪除</v-card-text
-        >
+        <v-card-text>確定要刪除這個使用者？</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="primary" text @click="close">取消</v-btn>
@@ -361,11 +359,7 @@ export default {
       'updateUser',
       'deleteUser',
     ]),
-    getColor(inventory) {
-      if (inventory < 10) return 'error'
-      else if (inventory < 50) return 'secondary'
-      else return 'primary'
-    },
+    // 增刪改查操作
     close() {
       this.defaultDialog = false
       this.deleteDialog = false

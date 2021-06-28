@@ -357,7 +357,7 @@ export default {
       'deleteSale',
     ]),
     ...mapActions('merchandise', ['getAllMerchandises']),
-    ...mapMutations('purchase', ['setMonth', 'setMonthSel']),
+    ...mapMutations('sale', ['setMonth', 'setMonthSel']),
     // 資料顯示
     typeColor(type, text = false) {
       return (
