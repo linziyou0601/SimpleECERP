@@ -1,12 +1,14 @@
 import cookieParser from 'cookie-parser'
 import csrf from 'csurf'
 import express from 'express'
+import bcrypt from 'bcrypt'
 import { getJWT } from './jwt'
 import prisma from './prismaClient'
 import merchandise from './route/merchandise'
 import adjustment from './route/adjustment'
 import purchase from './route/purchase'
 import sale from './route/sale'
+import user from './route/user'
 
 const app = express()
 
@@ -18,6 +20,7 @@ app.use('/merchandise', merchandise)
 app.use('/merchandise/adjustment', adjustment)
 app.use('/merchandise/purchase', purchase)
 app.use('/merchandise/sale', sale)
+app.use('/user', user)
 
 app.get('/csrf', function (req, res) {
   res.cookie('XSRF-TOKEN', req.csrfToken())
@@ -29,15 +32,15 @@ app.post('/login', async (req, res) => {
   const user = await prisma.user.findFirst({
     where: {
       account,
-      password,
     },
     select: {
       id: true,
+      password: true,
       account: true,
       scope: true
     },
   })
-  if (!user) {
+  if (!user || !bcrypt.compareSync(password, user.password)) {
     res.send({
       code: 200,
       message: 'failed',
@@ -46,6 +49,7 @@ app.post('/login', async (req, res) => {
   } else {
     const jwt = await getJWT(user)
     await prisma.user.update({ where: { id: user.id }, data: { token: jwt } })
+    delete user['password']
     res.send({
       code: 200,
       message: 'ok',

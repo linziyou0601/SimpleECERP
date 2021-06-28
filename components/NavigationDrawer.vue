@@ -90,6 +90,18 @@ export default {
           ],
         },
         {
+          icon: 'mdi-account-multiple',
+          title: '會員',
+          prefix: '/user',
+          subitems: [
+            {
+              icon: 'mdi-account-cog',
+              title: '會員管理',
+              to: '/user/manage',
+            },
+          ],
+        },
+        {
           icon: 'mdi-chart-bubble',
           title: 'Inspire',
           to: '/inspire',
