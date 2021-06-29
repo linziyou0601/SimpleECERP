@@ -53,17 +53,7 @@ const actions = {
     this.$axios
       .$put('/api/order', order)
       .then(({ message, result }) => {
-        dispatch('processResult', { titlePrefix: '修改', message, result })
-      })
-      .catch(({ response, code = response.status || null }) => {
-        dispatch('processError', code)
-      })
-  },
-  deleteOrder({ dispatch }, order) {
-    this.$axios
-      .$delete('/api/order', { data: order })
-      .then(({ message, result }) => {
-        dispatch('processResult', { titlePrefix: '刪除', message, result })
+        dispatch('processResult', { titlePrefix: '操作', message, result })
       })
       .catch(({ response, code = response.status || null }) => {
         dispatch('processError', code)

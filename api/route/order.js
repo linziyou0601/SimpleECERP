@@ -1,5 +1,4 @@
 import express from 'express'
-import bcrypt from 'bcrypt'
 import prisma from '../prismaClient'
 import { jwtMiddleware } from '../jwt-middleware'
 
@@ -8,6 +7,10 @@ const saltRounds = 10
 
 function isValidData(data) {
   return !(!data.userId || !Object.keys(data.orderItems).length)
+}
+function isValidNext(data) {
+  const nexts = ['pending', 'arrived', 'completed', 'canceled']
+  return !(!nexts.includes(data.action))
 }
 
 router.get('/', async (req, res) => {
@@ -47,7 +50,7 @@ router.post('/', jwtMiddleware, async (req, res) => {
           connect: { id: parseInt(key) },
         },
         amount: data.orderItems[key].amount,
-        price: data.orderItems[key].unitPrice,
+        price: data.orderItems[key].price,
       }
     })
     const orderCreate = await prisma.order.create({
@@ -76,23 +79,23 @@ router.put('/', jwtMiddleware, async (req, res) => {
   const data = req.body
   let [message, result] = ['', '']
   try {
-    if (!isValidData(data)) throw new Error('資料格式不正確')
-    const birthDate = !data.birth ? null : new Date(data.birth).toISOString()
-    const userUpdate = await prisma.user.update({
+    if (!isValidNext(data)) throw new Error('資料格式不正確')
+    const orderUpdate = await prisma.order.update({
       where: { id: data.id },
       data: {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        gender: data.gender,
-        birth: birthDate,
-        scope: data.scope,
+        status: data.action,
       },
     })
+    if (data.action === 'completed') {
+      const orderDetails = await prisma.orderDetail.findMany({
+        where: { orderId: data.id }
+      })
+      for (let od of orderDetails)
+        await autoCreateSales(od)
+    }
     message = 'ok'
-    result = userUpdate
+    result = orderUpdate
   } catch (exception) {
-    console.log(exception)
     message = 'failed'
     result = '資料格式不正確'
   }
@@ -103,33 +106,39 @@ router.put('/', jwtMiddleware, async (req, res) => {
   })
 })
 
-router.delete('/', jwtMiddleware, async (req, res) => {
-  const data = req.body
-  let [message, result] = ['', '']
-  try {
-    const orders = await prisma.order.findMany({
-      where: { userId: data.id },
+async function autoCreateSales(data) {
+  let success = false
+  while (!success) {
+    const inv = await prisma.inventory.findFirst({
+      where: { merchandiseId: data.merchandiseId },
+      orderBy: { createdAt: 'desc' },
     })
-    const flag = orders.length <= 0
-    if (flag) {
-      const userDelete = await prisma.user.delete({
-        where: { id: data.id },
+    const costOfGoodsSold = (inv.cost / inv.quantity) * data.amount
+
+    const inventoryOCC = await prisma.inventory.updateMany({
+      data: { version: { increment: 1 } },
+      where: { id: inv.id, version: inv.version },
+    })
+    if (inventoryOCC.count !== 0) {
+      await prisma.sale.create({
+        data: {
+          amount: data.amount,
+          unitCost: inv.cost / inv.quantity,
+          unitPrice: data.price,
+          merchandiseId: data.merchandiseId,
+          type: 'sale',
+          inventory: {
+            create: {
+              cost: inv.cost - costOfGoodsSold,
+              quantity: inv.quantity - data.amount,
+              merchandiseId: data.merchandiseId,
+            },
+          },
+        },
       })
-      message = 'ok'
-      result = userDelete
-    } else {
-      message = 'failed'
-      result = '該會員有訂購歷史紀錄，無法刪除'
+      success = true
     }
-  } catch (exception) {
-    message = 'failed'
-    result = '資料格式不正確'
   }
-  res.json({
-    code: 200,
-    message,
-    result,
-  })
-})
+}
 
 module.exports = router

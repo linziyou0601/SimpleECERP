@@ -13,6 +13,8 @@
         loading-text="資料載入中，請稍候..."
         hide-default-footer
         multi-sort
+        :expanded.sync="expanded"
+        show-expand
         class="elevation-3"
         @page-count="pageCount = $event"
       >
@@ -39,31 +41,15 @@
               <!-- 資料篩選區 -->
               <v-col cols="auto">
                 <v-row>
-                  <v-subheader>性別</v-subheader>
-                  <v-select
-                    v-model="filter.genders"
-                    :items="[
-                      { key: '男', value: 'male' },
-                      { key: '女', value: 'female' },
-                      { key: '不公開', value: 'hide' },
-                    ]"
-                    item-text="key"
-                    item-value="value"
-                    hide-details="true"
-                    class="max-w-300 pt-0"
-                    multiple
-                    chips
-                  ></v-select>
-                </v-row>
-              </v-col>
-              <v-col cols="auto">
-                <v-row>
                   <v-subheader>權限</v-subheader>
                   <v-select
-                    v-model="filter.scopes"
+                    v-model="filter.statuses"
                     :items="[
-                      { key: '管理員', value: 'admin' },
-                      { key: '顧客', value: 'customer' },
+                      { key: '訂單成立', value: 'created' },
+                      { key: '訂單處理中', value: 'pending' },
+                      { key: '商品已到貨', value: 'arrived' },
+                      { key: '訂單完成', value: 'completed' },
+                      { key: '訂單取消', value: 'canceled' },
                     ]"
                     item-text="key"
                     item-value="value"
@@ -79,23 +65,49 @@
         </template>
 
         <!-- 資料格式定義 -->
-        <template #[`item.gender`]="{ item }">
-          {{
-            item.gender === 'male'
-              ? '男'
-              : item.gender === 'female'
-              ? '女'
-              : '不公開'
-          }}
+        <template #[`item.status`]="{ item }">
+          {{ item.status | statusText }}
         </template>
-        <template #[`item.birth`]="{ item }">
-          {{ !item.birth ? '' : new Date(item.birth).toLocaleDateString() }}
+        <template #[`item.createdAt`]="{ item }">
+          {{ new Date(item.createdAt).toLocaleString() }}
         </template>
-        <template #[`item.scope`]="{ item }">
-          {{ item.scope === 'admin' ? '管理員' : '顧客' }}
+        <template #[`item.updatedAt`]="{ item }">
+          {{ new Date(item.updatedAt).toLocaleString() }}
         </template>
         <template #[`item.actions`]="{ item }">
-          <v-icon small class="mr-2" @click="edit(item)">mdi-pencil</v-icon>
+          <v-icon small class="mr-2" @click="process(item)"
+            >mdi-clipboard-edit</v-icon
+          >
+        </template>
+        <template #expanded-item="{ headers, item }">
+          <td :colspan="headers.length">
+            <v-simple-table
+              fixed-header
+              class="my-3"
+              style="border: 2px rgba(255, 255, 255, 0.12) solid"
+            >
+              <template #default>
+                <thead>
+                  <tr>
+                    <th class="text-left">品名</th>
+                    <th class="text-left">數量</th>
+                    <th class="text-left">單價</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(it, key) in item.orderDetail" :key="key">
+                    <td>{{ it.merchandise.title }}</td>
+                    <td>{{ it.amount + it.merchandise.unit }}</td>
+                    <td>{{ it.price | currency }}</td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" class="text-right">總計</td>
+                    <td>{{ getTotalPrice(item.orderDetail) | currency }}</td>
+                  </tr>
+                </tbody>
+              </template>
+            </v-simple-table>
+          </td>
         </template>
       </v-data-table>
     </v-col>
@@ -137,7 +149,6 @@
                   item-text="name"
                   item-value="id"
                   hide-details="true"
-                  @input="userSelected"
                 ></v-autocomplete>
               </v-col>
               <v-col cols="12">
@@ -147,7 +158,7 @@
                 >
                   <v-col cols="12" sm="7">{{ item.title }}</v-col>
                   <v-col cols="5" sm="2">{{ item.amount + item.unit }}</v-col>
-                  <v-col cols="5" sm="2">{{ item.unitPrice }}元</v-col>
+                  <v-col cols="5" sm="2">{{ item.price | currency }}</v-col>
                 </v-row>
               </v-col>
               <v-col cols="12">
@@ -178,7 +189,7 @@
               </v-col>
               <v-col cols="5" sm="2">
                 <v-text-field
-                  v-model.number="editingItem.unitPrice"
+                  v-model.number="editingItem.price"
                   :label="'單價*'"
                   type="number"
                   hide-details="true"
@@ -193,7 +204,9 @@
               </v-col>
               <v-col cols="12">
                 <v-chip color="primary" class="text-h6"
-                  >總金額：{{ getTotalPrice() }}</v-chip
+                  >總金額：{{
+                    getTotalPrice(editingOrder.orderItems) | currency
+                  }}</v-chip
                 >
               </v-col>
               <small>*為必填欄位</small>
@@ -213,6 +226,10 @@
       <v-card>
         <v-card-title>
           <span class="text-h5">處理訂單</span>
+          <v-spacer />
+          <v-btn icon @click="close">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
         <v-card-text>
           <v-container>
@@ -274,7 +291,7 @@
                 <v-list-item-title>{{ item.title }}</v-list-item-title>
                 <v-list-item-subtitle
                   >{{ item.amount + item.unit }} ×
-                  {{ item.unitPrice }}元</v-list-item-subtitle
+                  {{ item.price }}元</v-list-item-subtitle
                 >
               </v-list-item-content>
             </v-list-item>
@@ -287,7 +304,7 @@
                 <v-list-item-title class="text-right">總金額</v-list-item-title>
               </v-list-item-content>
               <v-list-item-action class="text-h5">
-                {{ getTotalPrice() }}
+                {{ getTotalPrice(editingOrder.orderItems) | currency }}
               </v-list-item-action>
             </v-list-item>
             <v-list-item>
@@ -295,27 +312,55 @@
                 <v-list-item-title class="text-right">狀態</v-list-item-title>
               </v-list-item-content>
               <v-list-item-action class="text-h5">
-                {{ editingOrder.status }}
+                {{ editingOrder.status | statusText }}
               </v-list-item-action>
             </v-list-item>
           </v-container>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="close">關閉</v-btn>
+          <v-spacer />
+          <v-btn
+            v-if="getDoNextText()"
+            color="primary"
+            class="mb-3 px-5"
+            depressed
+            rounded
+            @click="doNext"
+          >
+            {{ getDoNextText() }}
+          </v-btn>
+          <v-btn
+            v-if="editingOrder.status === 'created'"
+            color="primary"
+            class="mb-3 px-5"
+            outlined
+            rounded
+            @click="doCancel"
+          >
+            拒單
+          </v-btn>
+          <v-spacer />
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <!-- 刪除表單對話框 -->
-    <v-dialog v-model="deleteDialog" max-width="500px">
+    <!-- 確認表單對話框 -->
+    <v-dialog v-model="doNextDialog" max-width="500px">
       <v-card>
-        <v-card-title class="text-h5">刪除</v-card-title>
-        <v-card-text>確定要刪除這筆訂單？</v-card-text>
+        <v-card-title class="text-h5">操作確認</v-card-title>
+        <v-card-text>
+          確定要對這筆訂單「{{ doActionName }}」？
+          <br />
+          一旦確認便不可更改！！
+        </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="close">取消</v-btn>
-          <v-btn color="error" text>刪除</v-btn>
+          <v-btn color="accent" text @click="doNextDialog = false">
+            取消
+          </v-btn>
+          <v-btn :color="doActionName | doNextColor" text @click="doConfirm">
+            確定
+          </v-btn>
           <v-spacer></v-spacer>
         </v-card-actions>
       </v-card>
@@ -342,17 +387,26 @@ export default {
       ],
       // 資料表內容顯示
       search: '',
+      expanded: [],
       headers: [
         { text: '編號', value: 'id' },
-        { text: '訂單狀態', value: 'status' },
-        { text: '訂購人姓名', value: 'user.name' },
-        { text: '訂購人電話', value: 'user.phone' },
-        { text: '詳細資料', value: 'orderDetail' },
+        {
+          text: '訂單狀態',
+          value: 'status',
+          filter: (value) => {
+            if (!this.filter.statuses.length) return true
+            return this.filter.statuses.includes(value)
+          },
+        },
+        { text: '訂購人', value: 'user.name' },
+        { text: '電話', value: 'user.phone' },
+        { text: '建立時間', value: 'createdAt' },
+        { text: '更新時間', value: 'updatedAt' },
         { text: '操作', value: 'actions', sortable: false },
+        { text: '', value: 'data-table-expand' },
       ],
       filter: {
-        genders: [],
-        scopes: [],
+        statuses: [],
       },
       // 編輯資料表內容
       rules: {
@@ -361,6 +415,7 @@ export default {
       },
       defaultDialog: false,
       processDialog: false,
+      doNextDialog: false,
       defaultOrder: {
         userId: '',
         status: '',
@@ -370,9 +425,10 @@ export default {
       defaultItem: {
         merchandise: {},
         amount: 0,
-        unitPrice: 0,
+        price: 0,
       },
       editingItem: { ...this.defaultItem },
+      doActionName: '',
     }
   },
   computed: {
@@ -386,47 +442,63 @@ export default {
     this.getAllOrders()
     this.$nuxt.$emit('pageTitle', this.pageTitle)
   },
+  filters: {
+    currency(price) {
+      return price.toLocaleString('zh-TW') + '元'
+    },
+    statusText(t) {
+      if (t === 'created') return '訂單成立'
+      else if (t === 'pending') return '訂單處理中'
+      else if (t === 'arrived') return '商品已到貨'
+      else if (t === 'completed') return '訂單完成'
+      else if (t === 'canceled') return '訂單取消'
+      return ''
+    },
+    doNextColor(t) {
+      return t === '拒單' ? 'error' : 'primary'
+    },
+  },
   methods: {
-    ...mapActions('order', [
-      'getAllOrders',
-      'createOrder',
-      'updateOrder',
-      'deleteOrder',
-    ]),
+    ...mapActions('order', ['getAllOrders', 'createOrder', 'updateOrder']),
     ...mapActions('merchandise', ['getAllMerchandises']),
     ...mapActions('user', ['getAllUsers']),
     // 資料顯示
-    userSelected(id) {
-      // const user = this.allUsers.find((mc) => mc.id === id)
-      // this.editingOrder.unitPrice = merchandise.price
-    },
     merchandiseSelected(merchandise) {
-      this.editingItem.unitPrice = merchandise.price
+      this.editingItem.price = merchandise.price
     },
     addToCart() {
-      const { merchandise, amount, unitPrice } = this.editingItem
+      const { merchandise, amount, price } = this.editingItem
       const key = merchandise.id || null
-      if (!!key && amount > 0 && unitPrice > 0) {
+      if (!!key && amount > 0 && price > 0) {
         if (!this.editingOrder.orderItems[key]) {
           this.editingOrder.orderItems[key] = {
             title: merchandise.title,
             unit: merchandise.unit,
             amount,
-            unitPrice,
+            price,
           }
         } else {
           this.editingOrder.orderItems[key].amount += amount
-          this.editingOrder.orderItems[key].unitPrice = unitPrice
+          this.editingOrder.orderItems[key].price = price
         }
       }
       this.editingItem = { ...this.defaultItem }
     },
-    getTotalPrice() {
-      if (!this.editingOrder.orderItems) return 0
-      return Object.values(this.editingOrder.orderItems).reduce(
-        (t, { amount, unitPrice }) => t + amount * unitPrice,
+    getTotalPrice(data) {
+      if (!data) return 0
+      return Object.values(data).reduce(
+        (t, { amount, price }) => t + amount * price,
         0
       )
+    },
+    getDoNextText() {
+      const t = this.editingOrder.status
+      if (t === 'created') return '接單'
+      else if (t === 'pending') return '到貨'
+      else if (t === 'arrived') return '完成銷貨'
+      else if (t === 'completed') return ''
+      else if (t === 'canceled') return ''
+      return ''
     },
     // 增刪改查操作
     reload() {
@@ -437,21 +509,9 @@ export default {
     close() {
       this.defaultDialog = false
       this.processDialog = false
+      this.doNextDialog = false
       this.editingOrder = { ...this.defaultOrder }
       this.editingItem = { ...this.defaultItem }
-    },
-    edit(item) {
-      this.processDialog = true
-      this.editingOrder = { ...item }
-      this.editingOrder.orderItems = {}
-      for (const it of item.orderDetail) {
-        this.editingOrder.orderItems[it.merchandiseId] = {
-          title: it.merchandise.title,
-          unit: it.merchandise.unit,
-          amount: it.amount,
-          unitPrice: it.price,
-        }
-      }
     },
     create() {
       this.defaultDialog = true
@@ -460,6 +520,36 @@ export default {
     },
     save() {
       this.createOrder(this.editingOrder)
+      this.close()
+    },
+    process(item) {
+      this.processDialog = true
+      this.editingOrder = { ...item }
+      this.editingOrder.orderItems = {}
+      for (const it of item.orderDetail) {
+        this.editingOrder.orderItems[it.merchandiseId] = {
+          title: it.merchandise.title,
+          unit: it.merchandise.unit,
+          amount: it.amount,
+          price: it.price,
+        }
+      }
+    },
+    doCancel() {
+      this.doNextDialog = true
+      this.doActionName = '拒單'
+    },
+    doNext() {
+      this.doNextDialog = true
+      this.doActionName = this.getDoNextText()
+    },
+    doConfirm() {
+      const ac = this.doActionName
+      if (ac === '接單') this.editingOrder.action = 'pending'
+      else if (ac === '到貨') this.editingOrder.action = 'arrived'
+      else if (ac === '完成銷貨') this.editingOrder.action = 'completed'
+      else if (ac === '拒單') this.editingOrder.action = 'canceled'
+      this.updateOrder(this.editingOrder)
       this.close()
     },
   },
