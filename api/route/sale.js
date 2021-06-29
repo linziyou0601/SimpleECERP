@@ -8,18 +8,6 @@ function isValidData(data) {
   return !(data.amount <= 0 || data.unitPrice <= 0)
 }
 
-async function isEditable(merchandiseId, recordDatetime) {
-  const inventories = await prisma.inventory.findMany({
-    where: {
-      merchandiseId,
-      createdAt: {
-        gt: recordDatetime,
-      },
-    },
-  })
-  return inventories.length <= 0
-}
-
 router.get('/', async (req, res) => {
   const sales = await prisma.sale.findMany({
     include: {
@@ -47,24 +35,34 @@ router.post('/', jwtMiddleware, async (req, res) => {
       orderBy: { createdAt: 'desc' },
     })
     const costOfGoodsSold = (inv.cost / inv.quantity) * data.amount
-    const saleCreate = await prisma.sale.create({
-      data: {
-        amount: data.amount,
-        unitCost: inv.cost / inv.quantity,
-        unitPrice: data.unitPrice,
-        merchandiseId: data.merchandiseId,
-        type: data.type,
-        inventory: {
-          create: {
-            cost: inv.cost - costOfGoodsSold,
-            quantity: inv.quantity - data.amount,
-            merchandiseId: data.merchandiseId,
+
+    const inventoryOCC = await prisma.inventory.updateMany({
+      data: { version: { increment: 1 } },
+      where: { id: inv.id, version: inv.version },
+    })
+    if (inventoryOCC.count !== 0) {
+      const saleCreate = await prisma.sale.create({
+        data: {
+          amount: data.amount,
+          unitCost: inv.cost / inv.quantity,
+          unitPrice: data.unitPrice,
+          merchandiseId: data.merchandiseId,
+          type: data.type,
+          inventory: {
+            create: {
+              cost: inv.cost - costOfGoodsSold,
+              quantity: inv.quantity - data.amount,
+              merchandiseId: data.merchandiseId,
+            },
           },
         },
-      },
-    })
-    message = 'ok'
-    result = saleCreate
+      })
+      message = 'ok'
+      result = saleCreate
+    } else {
+      message = 'failed'
+      result = '出了點狀況，請稍後再試'
+    }
   } catch (exception) {
     message = 'failed'
     result = '資料格式不正確'
@@ -82,28 +80,42 @@ router.put('/', jwtMiddleware, async (req, res) => {
   try {
     if (!isValidData(data)) throw new Error('資料格式不正確')
     if (data.type !== 'sale') data.amount *= -1
-    const flag = await isEditable(data.merchandiseId, data.inventory.createdAt)
-    if (flag) {
+
+    const inv = await prisma.inventory.findFirst({
+      where: { merchandiseId: data.merchandiseId },
+      orderBy: { createdAt: 'desc' },
+    })
+    if (inv.id == data.inventory.id) {
       const oldData = await prisma.sale.findFirst({
         where: { id: data.id },
       })
       const diffAmount = data.amount - oldData.amount
       const diffCostOfGoodsSold = oldData.unitCost * diffAmount
-      const saleUpdate = await prisma.sale.update({
-        where: { id: data.id },
-        data: {
-          amount: data.amount,
-          unitPrice: data.unitPrice,
-          inventory: {
-            update: {
-              cost: { decrement: diffCostOfGoodsSold },
-              quantity: { decrement: diffAmount },
+
+      const inventoryOCC = await prisma.inventory.updateMany({
+        data: { version: { increment: 1 } },
+        where: { id: inv.id, version: inv.version },
+      })
+      if (inventoryOCC.count !== 0) {
+        const saleUpdate = await prisma.sale.update({
+          where: { id: data.id },
+          data: {
+            amount: data.amount,
+            unitPrice: data.unitPrice,
+            inventory: {
+              update: {
+                cost: { decrement: diffCostOfGoodsSold },
+                quantity: { decrement: diffAmount },
+              },
             },
           },
-        },
-      })
-      message = 'ok'
-      result = saleUpdate
+        })
+        message = 'ok'
+        result = saleUpdate
+      } else {
+        message = 'failed'
+        result = '出了點狀況，請稍後再試'
+      }
     } else {
       message = 'failed'
       result = '操作不允許，此筆調整資料之後有其他進銷存資料'
@@ -123,8 +135,11 @@ router.delete('/', jwtMiddleware, async (req, res) => {
   const data = req.body
   let [message, result] = ['', '']
   try {
-    const flag = await isEditable(data.merchandiseId, data.inventory.createdAt)
-    if (flag) {
+    const inv = await prisma.inventory.findFirst({
+      where: { merchandiseId: data.merchandiseId },
+      orderBy: { createdAt: 'desc' },
+    })
+    if (inv.id == data.inventory.id) {
       const saleDelete = prisma.sale.delete({
         where: { id: data.id },
       })

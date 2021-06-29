@@ -56,6 +56,7 @@ model Inventory {
     purchaseId    Int?
     sale          Sale?       @relation(fields: [saleId], references: [id])
     saleId        Int?
+    version       Int         @default(0)
 }
 
 model Adjustment {

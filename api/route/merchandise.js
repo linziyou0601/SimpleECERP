@@ -95,7 +95,7 @@ router.delete('/', jwtMiddleware, async (req, res) => {
     const inventories = await prisma.inventory.findMany({
       where: { merchandiseId: data.id },
     })
-    const flag = inventories.length <= 1
+    const flag = inventories.length === 1
     if (flag) {
       const merchandiseDelete = prisma.merchandise.delete({
         where: { id: data.id },
@@ -114,6 +114,7 @@ router.delete('/', jwtMiddleware, async (req, res) => {
       result = '該商品有進銷存等相關紀錄，請以下架取代刪除'
     }
   } catch (exception) {
+    console.log(exception)
     message = 'failed'
     result = '資料格式不正確'
   }

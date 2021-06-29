@@ -8,25 +8,13 @@ function isValidData(data) {
   return !(data.amount <= 0 || data.unitCost <= 0)
 }
 
-async function isEditable(merchandiseId, recordDatetime) {
-  const inventories = await prisma.inventory.findMany({
-    where: {
-      merchandiseId,
-      createdAt: {
-        gt: recordDatetime,
-      },
-    },
-  })
-  return inventories.length <= 0
-}
-
 router.get('/', async (req, res) => {
   const purchases = await prisma.purchase.findMany({
     include: {
       inventory: true,
       merchandise: {
-        select: { title: true }
-      }
+        select: { title: true },
+      },
     },
   })
   res.json({
@@ -46,25 +34,35 @@ router.post('/', jwtMiddleware, async (req, res) => {
       where: { merchandiseId: data.merchandiseId },
       orderBy: { createdAt: 'desc' },
     })
-    const diffAmount = (data.type !== 'discount' ? data.amount : 0)
+    const diffAmount = data.type !== 'discount' ? data.amount : 0
     const diffCost = data.unitCost * data.amount
-    const purchaseCreate = await prisma.purchase.create({
-      data: {
-        amount: data.amount,
-        unitCost: data.unitCost,
-        merchandiseId: data.merchandiseId,
-        type: data.type,
-        inventory: {
-          create: {
-            cost: inv.cost + diffCost,
-            quantity: inv.quantity + diffAmount,
-            merchandiseId: data.merchandiseId,
+
+    const inventoryOCC = await prisma.inventory.updateMany({
+      data: { version: { increment: 1 } },
+      where: { id: inv.id, version: inv.version },
+    })
+    if (inventoryOCC.count !== 0) {
+      const purchaseCreate = await prisma.purchase.create({
+        data: {
+          amount: data.amount,
+          unitCost: data.unitCost,
+          merchandiseId: data.merchandiseId,
+          type: data.type,
+          inventory: {
+            create: {
+              cost: inv.cost + diffCost,
+              quantity: inv.quantity + diffAmount,
+              merchandiseId: data.merchandiseId,
+            },
           },
         },
-      },
-    })
-    message = 'ok'
-    result = purchaseCreate
+      })
+      message = 'ok'
+      result = purchaseCreate
+    } else {
+      message = 'failed'
+      result = '出了點狀況，請稍後再試'
+    }
   } catch (exception) {
     message = 'failed'
     result = '資料格式不正確'
@@ -82,28 +80,42 @@ router.put('/', jwtMiddleware, async (req, res) => {
   try {
     if (!isValidData(data)) throw new Error('資料格式不正確')
     if (data.type !== 'purchase') data.amount *= -1
-    const flag = await isEditable(data.merchandiseId, data.inventory.createdAt)
-    if (flag) {
+    
+    const inv = await prisma.inventory.findFirst({
+      where: { merchandiseId: data.merchandiseId },
+      orderBy: { createdAt: 'desc' },
+    })
+    if (inv.id == data.inventory.id) {
       const oldData = await prisma.purchase.findFirst({
         where: { id: data.id },
       })
-      const diffAmount = (data.type !== 'discount' ? data.amount - oldData.amount : 0)
+      const diffAmount = data.type !== 'discount' ? data.amount - oldData.amount : 0
       const diffCost = data.unitCost * data.amount - oldData.unitCost * oldData.amount
-      const purchaseUpdate = await prisma.purchase.update({
-        where: { id: data.id },
-        data: {
-          amount: data.amount,
-          unitCost: data.unitCost,
-          inventory: {
-            update: {
-              cost: { increment: diffCost },
-              quantity: { increment: diffAmount },
+
+      const inventoryOCC = await prisma.inventory.updateMany({
+        data: { version: { increment: 1 } },
+        where: { id: inv.id, version: inv.version },
+      })
+      if (inventoryOCC.count !== 0) {
+        const purchaseUpdate = await prisma.purchase.update({
+          where: { id: data.id },
+          data: {
+            amount: data.amount,
+            unitCost: data.unitCost,
+            inventory: {
+              update: {
+                cost: { increment: diffCost },
+                quantity: { increment: diffAmount },
+              },
             },
           },
-        },
-      })
-      message = 'ok'
-      result = purchaseUpdate
+        })
+        message = 'ok'
+        result = purchaseUpdate
+      } else {
+        message = 'failed'
+        result = '出了點狀況，請稍後再試'
+      }
     } else {
       message = 'failed'
       result = '操作不允許，此筆進貨資料之後有其他進銷存資料'
@@ -123,8 +135,11 @@ router.delete('/', jwtMiddleware, async (req, res) => {
   const data = req.body
   let [message, result] = ['', '']
   try {
-    const flag = await isEditable(data.merchandiseId, data.inventory.createdAt)
-    if (flag) {
+    const inv = await prisma.inventory.findFirst({
+      where: { merchandiseId: data.merchandiseId },
+      orderBy: { createdAt: 'desc' },
+    })
+    if (inv.id == data.inventory.id) {
       const purchaseDelete = prisma.purchase.delete({
         where: { id: data.id },
       })
