@@ -79,8 +79,8 @@
             >mdi-clipboard-edit</v-icon
           >
         </template>
-        <template #expanded-item="{ headers, item }">
-          <td :colspan="headers.length">
+        <template #expanded-item="{ item }">
+          <td colspan="8">
             <v-simple-table
               fixed-header
               class="my-3"
@@ -371,6 +371,22 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 export default {
+  filters: {
+    currency(price) {
+      return price.toLocaleString('zh-TW') + '元'
+    },
+    statusText(t) {
+      if (t === 'created') return '訂單成立'
+      else if (t === 'pending') return '訂單處理中'
+      else if (t === 'arrived') return '商品已到貨'
+      else if (t === 'completed') return '訂單完成'
+      else if (t === 'canceled') return '訂單取消'
+      return ''
+    },
+    doNextColor(t) {
+      return t === '拒單' ? 'error' : 'primary'
+    },
+  },
   data() {
     return {
       // 整頁相關
@@ -441,22 +457,6 @@ export default {
     this.getAllUsers()
     this.getAllOrders()
     this.$nuxt.$emit('pageTitle', this.pageTitle)
-  },
-  filters: {
-    currency(price) {
-      return price.toLocaleString('zh-TW') + '元'
-    },
-    statusText(t) {
-      if (t === 'created') return '訂單成立'
-      else if (t === 'pending') return '訂單處理中'
-      else if (t === 'arrived') return '商品已到貨'
-      else if (t === 'completed') return '訂單完成'
-      else if (t === 'canceled') return '訂單取消'
-      return ''
-    },
-    doNextColor(t) {
-      return t === '拒單' ? 'error' : 'primary'
-    },
   },
   methods: {
     ...mapActions('order', ['getAllOrders', 'createOrder', 'updateOrder']),
