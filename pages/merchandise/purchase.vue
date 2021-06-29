@@ -269,6 +269,24 @@
 <script>
 import { mapGetters, mapActions, mapMutations } from 'vuex'
 export default {
+  filters: {
+    currency(price) {
+      return price.toLocaleString('zh-TW')
+    },
+    fColor(type, text = false) {
+      return (
+        (type === 'purchase' ? (text ? '' : 'primary') : 'error') +
+        (text ? '--text' : '')
+      )
+    },
+    fText(type) {
+      return type === 'return'
+        ? '進貨退出'
+        : type === 'discount'
+        ? '進貨折讓'
+        : '進貨'
+    },
+  },
   data() {
     return {
       // 整頁相關
@@ -352,24 +370,6 @@ export default {
     this.getAllMerchandises()
     this.getAllPurchases()
     this.$nuxt.$emit('pageTitle', this.pageTitle)
-  },
-  filters: {
-    currency(price) {
-      return price.toLocaleString('zh-TW')
-    },
-    fColor(type, text = false) {
-      return (
-        (type === 'purchase' ? (text ? '' : 'primary') : 'error') +
-        (text ? '--text' : '')
-      )
-    },
-    fText(type) {
-      return type === 'return'
-        ? '進貨退出'
-        : type === 'discount'
-        ? '進貨折讓'
-        : '進貨'
-    },
   },
   methods: {
     ...mapActions('purchase', [

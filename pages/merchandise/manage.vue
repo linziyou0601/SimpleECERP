@@ -206,6 +206,16 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 export default {
+  filters: {
+    currency(price) {
+      return price.toLocaleString('zh-TW')
+    },
+    fColor(quantity) {
+      if (quantity < 10) return 'error'
+      else if (quantity < 50) return 'secondary'
+      else return 'primary'
+    },
+  },
   data() {
     return {
       // 整頁相關
@@ -273,16 +283,6 @@ export default {
   created() {
     this.getAllMerchandises()
     this.$nuxt.$emit('pageTitle', this.pageTitle)
-  },
-  filters: {
-    currency(price) {
-      return price.toLocaleString('zh-TW')
-    },
-    fColor(quantity) {
-      if (quantity < 10) return 'error'
-      else if (quantity < 50) return 'secondary'
-      else return 'primary'
-    },
   },
   methods: {
     ...mapActions('merchandise', [
