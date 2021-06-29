@@ -65,7 +65,6 @@ router.post('/', jwtMiddleware, async (req, res) => {
       result = userCreate
     }
   } catch (exception) {
-    console.log(exception)
     message = 'failed'
     result = '資料格式不正確'
   }
@@ -96,7 +95,6 @@ router.put('/', jwtMiddleware, async (req, res) => {
     message = 'ok'
     result = userUpdate
   } catch (exception) {
-    console.log(exception)
     message = 'failed'
     result = '資料格式不正確'
   }

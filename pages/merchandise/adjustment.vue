@@ -126,15 +126,17 @@
 
         <!-- 資料格式定義 -->
         <template #[`item.type`]="{ item }">
-          <span :class="typeColor(item.type, true)">{{
-            typeText(item.type)
-          }}</span>
+          <span :class="item.type | fColor(true)">{{ item.type | fText }}</span>
         </template>
         <template #[`item.amount`]="{ item }">
-          <span :class="typeColor(item.type, true)">{{ item.amount }}</span>
+          <span :class="item.type | fColor(true)">{{
+            item.amount | currency
+          }}</span>
         </template>
         <template #[`item.unitCost`]="{ item }">
-          <span :class="typeColor(item.type, true)">{{ item.unitCost }}</span>
+          <span :class="item.type | fColor(true)">{{
+            item.unitCost | currency
+          }}</span>
         </template>
         <template #[`item.createdAt`]="{ item }">
           {{ new Date(item.createdAt).toLocaleString() }}
@@ -171,7 +173,7 @@
         <v-card-title>
           <span class="text-h5">
             {{ adjustmentIndex > -1 ? '修改' : '新增' }}調整單（{{
-              typeText(editingAdjustment.type)
+              editingAdjustment.type | fText
             }}）
           </span>
         </v-card-title>
@@ -211,11 +213,10 @@
                 ></v-text-field>
               </v-col>
               <v-col cols="12">
-                <v-chip
-                  :color="typeColor(editingAdjustment.type)"
-                  class="text-h6"
+                <v-chip :color="editingAdjustment.type | fColor" class="text-h6"
                   >總金額：{{
-                    editingAdjustment.unitCost * editingAdjustment.amount
+                    (editingAdjustment.unitCost * editingAdjustment.amount)
+                      | currency
                   }}</v-chip
                 >
               </v-col>
@@ -346,6 +347,20 @@ export default {
     this.getAllAdjustments()
     this.$nuxt.$emit('pageTitle', this.pageTitle)
   },
+  filters: {
+    currency(price) {
+      return price.toLocaleString('zh-TW')
+    },
+    fColor(type, text = false) {
+      return (
+        (type === 'amount' ? (text ? '' : 'primary') : 'secondary') +
+        (text ? '--text' : '')
+      )
+    },
+    fText(type) {
+      return type === 'amount' ? '調數量' : '調成本及數量'
+    },
+  },
   methods: {
     ...mapActions('adjustment', [
       'getAllAdjustments',
@@ -356,15 +371,6 @@ export default {
     ...mapActions('merchandise', ['getAllMerchandises']),
     ...mapMutations('purchase', ['setMonth', 'setMonthSel']),
     // 資料顯示
-    typeColor(type, text = false) {
-      return (
-        (type === 'amount' ? (text ? '' : 'primary') : 'secondary') +
-        (text ? '--text' : '')
-      )
-    },
-    typeText(type) {
-      return type === 'amount' ? '調數量' : '調成本及數量'
-    },
     getHint(field) {
       if (field === 'amount') return '此為數量變化值，正值為增加，負值為減少'
       else if (field === 'unitCost') return '此欄位會如同進貨一樣影響成本'

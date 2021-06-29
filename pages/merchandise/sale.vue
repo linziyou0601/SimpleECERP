@@ -126,18 +126,22 @@
 
         <!-- 資料格式定義 -->
         <template #[`item.type`]="{ item }">
-          <span :class="typeColor(item.type, true)">{{
-            typeText(item.type)
-          }}</span>
+          <span :class="item.type | fColor(true)">{{ item.type | fText }}</span>
         </template>
         <template #[`item.amount`]="{ item }">
-          <span :class="typeColor(item.type, true)">{{ item.amount }}</span>
+          <span :class="item.type | fColor(true)">{{
+            item.amount | currency
+          }}</span>
         </template>
         <template #[`item.unitCost`]="{ item }">
-          <span :class="typeColor(item.type, true)">{{ item.unitCost }}</span>
+          <span :class="item.type | fColor(true)">{{
+            item.unitCost | currency
+          }}</span>
         </template>
         <template #[`item.unitPrice`]="{ item }">
-          <span :class="typeColor(item.type, true)">{{ item.unitPrice }}</span>
+          <span :class="item.type | fColor(true)">{{
+            item.unitPrice | currency
+          }}</span>
         </template>
         <template #[`item.createdAt`]="{ item }">
           {{ new Date(item.createdAt).toLocaleString() }}
@@ -177,7 +181,7 @@
         <v-card-title>
           <span class="text-h5">
             {{ saleIndex > -1 ? '修改' : '新增'
-            }}{{ typeText(editingSale.type) }}單
+            }}{{ editingSale.type | fType }}單
           </span>
         </v-card-title>
         <v-card-text>
@@ -215,9 +219,9 @@
                 ></v-text-field>
               </v-col>
               <v-col cols="12">
-                <v-chip :color="typeColor(editingSale.type)" class="text-h6"
+                <v-chip :color="editingSale.type | fColor" class="text-h6"
                   >總金額：{{
-                    editingSale.unitPrice * editingSale.amount
+                    (editingSale.unitPrice * editingSale.amount) | currency
                   }}</v-chip
                 >
               </v-col>
@@ -349,6 +353,20 @@ export default {
     this.getAllSales()
     this.$nuxt.$emit('pageTitle', this.pageTitle)
   },
+  filters: {
+    currency(price) {
+      return price.toLocaleString('zh-TW')
+    },
+    fColor(type, text = false) {
+      return (
+        (type === 'sale' ? (text ? '' : 'primary') : 'error') +
+        (text ? '--text' : '')
+      )
+    },
+    fText(type) {
+      return type === 'return' ? '銷貨退回' : '銷貨'
+    },
+  },
   methods: {
     ...mapActions('sale', [
       'getAllSales',
@@ -359,15 +377,6 @@ export default {
     ...mapActions('merchandise', ['getAllMerchandises']),
     ...mapMutations('sale', ['setMonth', 'setMonthSel']),
     // 資料顯示
-    typeColor(type, text = false) {
-      return (
-        (type === 'sale' ? (text ? '' : 'primary') : 'error') +
-        (text ? '--text' : '')
-      )
-    },
-    typeText(type) {
-      return type === 'return' ? '銷貨退回' : '銷貨'
-    },
     getHint(field) {
       if (field === 'unitPrice' && this.editingSale.type === 'return')
         return '此為銷貨退回單，請注意單位價格的改動'

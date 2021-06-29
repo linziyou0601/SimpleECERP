@@ -86,10 +86,15 @@
 
         <!-- 資料格式定義 -->
         <template #[`item.quantity`]="{ item }">
-          <v-chip :color="getColor(item.quantity)">{{ item.quantity }}</v-chip>
+          <v-chip :color="item.quantity | fColor">{{
+            item.quantity | currency
+          }}</v-chip>
         </template>
         <template #[`item.unitCost`]="{ item }">
-          {{ +item.unitCost.toFixed(2) }}
+          {{ +item.unitCost.toFixed(2) | currency }}
+        </template>
+        <template #[`item.price`]="{ item }">
+          {{ item.price | currency }}
         </template>
         <template #[`item.on`]="{ item }">
           <v-chip :color="item.on ? 'primary' : 'accent'">{{
@@ -269,6 +274,16 @@ export default {
     this.getAllMerchandises()
     this.$nuxt.$emit('pageTitle', this.pageTitle)
   },
+  filters: {
+    currency(price) {
+      return price.toLocaleString('zh-TW')
+    },
+    fColor(quantity) {
+      if (quantity < 10) return 'error'
+      else if (quantity < 50) return 'secondary'
+      else return 'primary'
+    },
+  },
   methods: {
     ...mapActions('merchandise', [
       'getAllMerchandises',
@@ -276,11 +291,6 @@ export default {
       'updateMerchandise',
       'deleteMerchandise',
     ]),
-    getColor(inventory) {
-      if (inventory < 10) return 'error'
-      else if (inventory < 50) return 'secondary'
-      else return 'primary'
-    },
     close() {
       this.defaultDialog = false
       this.deleteDialog = false

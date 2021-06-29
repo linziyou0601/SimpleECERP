@@ -127,15 +127,17 @@
 
         <!-- 資料格式定義 -->
         <template #[`item.type`]="{ item }">
-          <span :class="typeColor(item.type, true)">{{
-            typeText(item.type)
-          }}</span>
+          <span :class="item.type | fColor(true)">{{ item.type | fText }}</span>
         </template>
         <template #[`item.amount`]="{ item }">
-          <span :class="typeColor(item.type, true)">{{ item.amount }}</span>
+          <span :class="item.type | fColor(true)">{{
+            item.amount | currency
+          }}</span>
         </template>
         <template #[`item.unitCost`]="{ item }">
-          <span :class="typeColor(item.type, true)">{{ item.unitCost }}</span>
+          <span :class="item.type | fColor(true)">{{
+            item.unitCost | currency
+          }}</span>
         </template>
         <template #[`item.createdAt`]="{ item }">
           {{ new Date(item.createdAt).toLocaleString() }}
@@ -175,7 +177,7 @@
         <v-card-title>
           <span class="text-h5">
             {{ purchaseIndex > -1 ? '修改' : '新增'
-            }}{{ typeText(editingPurchase.type) }}單
+            }}{{ editingPurchase.type | fText }}單
           </span>
         </v-card-title>
         <v-card-text>
@@ -216,11 +218,12 @@
                 ></v-text-field>
               </v-col>
               <v-col cols="12">
-                <v-chip :color="typeColor(editingPurchase.type)" class="text-h6"
-                  >總金額：{{
-                    editingPurchase.unitCost * editingPurchase.amount
-                  }}</v-chip
-                >
+                <v-chip :color="editingPurchase.type | fColor" class="text-h6">
+                  總金額：{{
+                    (editingPurchase.unitCost * editingPurchase.amount)
+                      | currency
+                  }}
+                </v-chip>
               </v-col>
               <small>*為必填欄位</small>
               <v-col cols="12">
@@ -350,6 +353,24 @@ export default {
     this.getAllPurchases()
     this.$nuxt.$emit('pageTitle', this.pageTitle)
   },
+  filters: {
+    currency(price) {
+      return price.toLocaleString('zh-TW')
+    },
+    fColor(type, text = false) {
+      return (
+        (type === 'purchase' ? (text ? '' : 'primary') : 'error') +
+        (text ? '--text' : '')
+      )
+    },
+    fText(type) {
+      return type === 'return'
+        ? '進貨退出'
+        : type === 'discount'
+        ? '進貨折讓'
+        : '進貨'
+    },
+  },
   methods: {
     ...mapActions('purchase', [
       'getAllPurchases',
@@ -360,19 +381,6 @@ export default {
     ...mapActions('merchandise', ['getAllMerchandises']),
     ...mapMutations('purchase', ['setMonth', 'setMonthSel']),
     // 資料顯示
-    typeColor(type, text = false) {
-      return (
-        (type === 'purchase' ? (text ? '' : 'primary') : 'error') +
-        (text ? '--text' : '')
-      )
-    },
-    typeText(type) {
-      return type === 'return'
-        ? '進貨退出'
-        : type === 'discount'
-        ? '進貨折讓'
-        : '進貨'
-    },
     getHint(field) {
       if (field === 'amount' && this.editingPurchase.type === 'discount')
         return '此為進貨折讓單，請注意數量的改動'
