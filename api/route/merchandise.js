@@ -8,9 +8,48 @@ function isValidData(data) {
   return !(!data.title || data.unit<=0 || data.price<=0)
 }
 
+function toBeCountOrder(order) {
+  if (order.status === 'completed' || order.status === 'canceled')
+    return false
+  return true
+}
+
+/* product區 */
+router.get('/allProducts', jwtMiddleware, async (req, res) => {
+  let merchandises = await prisma.merchandise.findMany({
+    where: {
+      on: true
+    }
+  })
+  res.json({
+    code: 200,
+    message: 'ok',
+    data: merchandises,
+  })
+})
+
+router.get('/product', jwtMiddleware, async (req, res) => {
+  const id = parseInt(req.query.id)
+  let merchandises = await prisma.merchandise.findFirst({
+    where: { id }
+  })
+  res.json({
+    code: 200,
+    message: 'ok',
+    data: merchandises,
+  })
+})
+
+
+/* merchandise區 */
 router.get('/', async (req, res) => {
   let merchandises = await prisma.merchandise.findMany({
     include: {
+      orderDetail: {
+        include: {
+          order: true
+        }
+      },
       inventory: {
         orderBy: { createdAt: 'desc' },
         take: 1,
@@ -19,10 +58,16 @@ router.get('/', async (req, res) => {
   })
   merchandises = merchandises.map(mc => { 
     let rsl = { ...mc }
+    rsl.orders = rsl.orderDetail.reduce(
+      (t, { amount, order }) => toBeCountOrder(order)? t + amount: t,
+      0
+    )
     rsl.cost = rsl.inventory[0].cost
     rsl.quantity = rsl.inventory[0].quantity
     rsl.unitCost = rsl.cost / rsl.quantity || 0
     delete rsl.inventory
+    delete rsl.orderDetail
+    console.log(rsl)
     return rsl
   })
   res.json({

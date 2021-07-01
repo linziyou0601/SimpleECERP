@@ -3,7 +3,16 @@ import prisma from '../prismaClient'
 import { jwtMiddleware } from '../jwt-middleware'
 
 const router = express.Router()
-const saltRounds = 10
+
+function getDateRange(monthStr) {
+  const yyyy = monthStr.split('-')[0]
+  const thisM = monthStr.split('-')[1]
+  const nextM = String(parseInt(monthStr.split('-')[1]) + 1).padStart(2, '0')
+  return {
+    startDate: new Date(yyyy + '-' + thisM + '-01T00:00:00.000+08:00'),
+    endDate: new Date(yyyy + '-' + nextM + '-01T00:00:00.000+08:00')
+  }
+}
 
 function isValidData(data) {
   return !(!data.userId || !Object.keys(data.orderItems).length)
@@ -14,7 +23,18 @@ function isValidNext(data) {
 }
 
 router.get('/', async (req, res) => {
+  const { startDate, endDate } = getDateRange(req.query.month)
   const orders = await prisma.order.findMany({
+    where: {
+      AND: [
+        {
+          createdAt: { gte: startDate },
+        },
+        {
+          createdAt: { lt: endDate },
+        },
+      ],
+    },
     include: {
       user: {
         select: {

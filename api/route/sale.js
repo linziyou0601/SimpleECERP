@@ -4,12 +4,33 @@ import { jwtMiddleware } from '../jwt-middleware'
 
 const router = express.Router()
 
+function getDateRange(monthStr) {
+  const yyyy = monthStr.split('-')[0]
+  const thisM = monthStr.split('-')[1]
+  const nextM = String(parseInt(monthStr.split('-')[1]) + 1).padStart(2, '0')
+  return {
+    startDate: new Date(yyyy + '-' + thisM + '-01T00:00:00.000+08:00'),
+    endDate: new Date(yyyy + '-' + nextM + '-01T00:00:00.000+08:00')
+  }
+}
+
 function isValidData(data) {
   return !(data.amount <= 0 || data.unitPrice <= 0)
 }
 
 router.get('/', async (req, res) => {
+  const { startDate, endDate } = getDateRange(req.query.month)
   const sales = await prisma.sale.findMany({
+    where: {
+      AND: [
+        {
+          createdAt: { gte: startDate },
+        },
+        {
+          createdAt: { lt: endDate },
+        },
+      ],
+    },
     include: {
       inventory: true,
       merchandise: {
