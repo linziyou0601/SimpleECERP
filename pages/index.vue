@@ -1,11 +1,11 @@
 <template>
   <v-row class="align-self-start">
     <v-card
-      v-for="product in allMerchandises"
+      v-for="product in allProducts"
       :key="product.id"
       class="mx-4 my-4"
       max-width="200"
-      :to="'/inspire'"
+      :to="'/product/' + product.id"
     >
       <v-img
         src="https://cdn.vuetifyjs.com/images/cards/sunshine.jpg"
@@ -33,14 +33,14 @@ export default {
     }
   },
   computed: {
-    ...mapGetters('merchandise', ['allMerchandises']),
+    ...mapGetters('product', ['allProducts']),
   },
   created() {
-    this.getAllMerchandises()
+    this.getAllProducts()
     this.$nuxt.$emit('pageTitle', this.pageTitle)
   },
   methods: {
-    ...mapActions('merchandise', ['getAllMerchandises']),
+    ...mapActions('product', ['getAllProducts']),
   },
 }
 </script>

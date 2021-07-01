@@ -41,7 +41,48 @@
               <!-- 資料篩選區 -->
               <v-col cols="auto">
                 <v-row>
-                  <v-subheader>權限</v-subheader>
+                  <v-dialog
+                    ref="monthSelEl"
+                    v-model="monthSel"
+                    :return-value.sync="month"
+                    persistent
+                    width="290px"
+                    @input="reload()"
+                  >
+                    <template #activator="{ on, attrs }">
+                      <v-subheader>月份</v-subheader>
+                      <v-text-field
+                        v-model="month"
+                        hide-details="true"
+                        class="max-w-100 pt-2"
+                        readonly
+                        v-bind="attrs"
+                        v-on="on"
+                      ></v-text-field>
+                    </template>
+                    <v-date-picker
+                      v-model="month"
+                      type="month"
+                      locale="zh-tw"
+                      scrollable
+                    >
+                      <v-spacer></v-spacer>
+                      <v-btn text color="primary" @click="monthSel = false"
+                        >取消</v-btn
+                      >
+                      <v-btn
+                        text
+                        color="primary"
+                        @click="$refs.monthSelEl.save(month)"
+                        >選擇</v-btn
+                      >
+                    </v-date-picker>
+                  </v-dialog>
+                </v-row>
+              </v-col>
+              <v-col cols="auto">
+                <v-row>
+                  <v-subheader>訂單狀態</v-subheader>
                   <v-select
                     v-model="filter.statuses"
                     :items="[
@@ -369,7 +410,7 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters, mapActions, mapMutations } from 'vuex'
 export default {
   filters: {
     currency(price) {
@@ -451,6 +492,22 @@ export default {
     ...mapGetters('order', ['allOrders', 'loadingOrder']),
     ...mapGetters('merchandise', ['allMerchandises']),
     ...mapGetters('user', ['allUsers']),
+    month: {
+      get() {
+        return this.$store.state.order.month
+      },
+      set(val) {
+        this.setMonth(val)
+      },
+    },
+    monthSel: {
+      get() {
+        return this.$store.state.order.monthSel
+      },
+      set(val) {
+        this.setMonthSel(val)
+      },
+    },
   },
   created() {
     this.getAllMerchandises()
@@ -462,6 +519,7 @@ export default {
     ...mapActions('order', ['getAllOrders', 'createOrder', 'updateOrder']),
     ...mapActions('merchandise', ['getAllMerchandises']),
     ...mapActions('user', ['getAllUsers']),
+    ...mapMutations('order', ['setMonth', 'setMonthSel']),
     // 資料顯示
     merchandiseSelected(merchandise) {
       this.editingItem.price = merchandise.price

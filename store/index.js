@@ -26,16 +26,18 @@ const actions = {
       if (response.message === 'ok') {
         const auth = response.auth
         const redirectTo = this.$cookies.get('redirect_to') || 'index'
+        const params = this.$cookies.get('params') || {}
         commit('setAuth', auth)
-        this.$router.push({ name: redirectTo })
+        this.$router.push({ name: redirectTo, params })
       } else {
         const data = response.data
         commit('fireAlertDialog', { title: '登入失敗', content: data })
       }
     })
   },
-  logout({ commit }, unAuthRedirect) {
-    this.$cookies.set('redirect_to', unAuthRedirect)
+  logout({ commit }, { redirect, params }) {
+    this.$cookies.set('redirect_to', redirect)
+    this.$cookies.set('params', params)
     commit('unsetAuth')
     this.$router.push({ name: 'login' })
   },
