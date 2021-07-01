@@ -1,6 +1,6 @@
 <template>
   <v-row class="mx-sm-3 my-sm-3 align-self-start">
-    <v-col cols="12" sm="4" md="6" lg="5">
+    <v-col cols="12" sm="4" md="6" lg="5" elevation="3">
       <v-img
         class="rounded-lg"
         src="https://cdn.vuetifyjs.com/images/cards/sunshine.jpg"
@@ -9,7 +9,7 @@
     </v-col>
 
     <v-col>
-      <v-sheet min-height="70vh" rounded="lg" class="px-5 py-5">
+      <v-sheet min-height="70vh" rounded="lg" class="px-5 py-5" elevation="3">
         <v-card-title class="text-h4">{{ product.title }}</v-card-title>
         <v-card-text>
           <div class="mb-4">
