@@ -45,6 +45,7 @@
                     :return-value.sync="month"
                     persistent
                     width="290px"
+                    @input="reload()"
                   >
                     <template #activator="{ on, attrs }">
                       <v-subheader>月份</v-subheader>
@@ -341,7 +342,7 @@ export default {
     ...mapGetters('merchandise', ['allMerchandises']),
     month: {
       get() {
-        return this.$store.state.purchase.month
+        return this.$store.state.adjustment.month
       },
       set(val) {
         this.setMonth(val)
@@ -349,7 +350,7 @@ export default {
     },
     monthSel: {
       get() {
-        return this.$store.state.purchase.monthSel
+        return this.$store.state.adjustment.monthSel
       },
       set(val) {
         this.setMonthSel(val)

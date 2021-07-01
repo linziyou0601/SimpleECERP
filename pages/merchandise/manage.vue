@@ -85,10 +85,8 @@
         </template>
 
         <!-- 資料格式定義 -->
-        <template #[`item.quantity`]="{ item }">
-          <v-chip :color="item.quantity | fColor">{{
-            item.quantity | currency
-          }}</v-chip>
+        <template #[`item.orders`]="{ item }">
+          <v-chip :color="item | fColor">{{ item.orders | currency }}</v-chip>
         </template>
         <template #[`item.unitCost`]="{ item }">
           {{ +item.unitCost.toFixed(2) | currency }}
@@ -210,9 +208,8 @@ export default {
     currency(price) {
       return price.toLocaleString('zh-TW')
     },
-    fColor(quantity) {
-      if (quantity < 10) return 'error'
-      else if (quantity < 50) return 'secondary'
+    fColor(item) {
+      if (item.orders > item.quantity) return 'secondary'
       else return 'primary'
     },
   },
@@ -243,6 +240,7 @@ export default {
           },
         },
         { text: '單位', value: 'unit' },
+        { text: '下訂', value: 'orders' },
         { text: '存貨', value: 'quantity' },
         { text: '單位成本', value: 'unitCost' },
         { text: '價格', value: 'price' },

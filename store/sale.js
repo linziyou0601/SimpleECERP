@@ -24,13 +24,13 @@ const actions = {
   processError({ commit, dispatch }, code) {
     if (code === 401 || code === 403) {
       commit('fireUnAuthAlertDialog', null, { root: true })
-      dispatch('logout', 'merchandise-sale', { root: true })
+      dispatch('logout', { redirect: 'merchandise-sale' }, { root: true })
     }
   },
-  getAllSales({ commit, dispatch }) {
+  getAllSales({ state, commit, dispatch }) {
     commit('setLoadingSale', true)
     this.$axios
-      .$get('/api/merchandise/sale')
+      .$get('/api/merchandise/sale?month=' + state.month)
       .then(({ code, data }) => {
         if (code === 200) commit('setAllSales', data)
       })

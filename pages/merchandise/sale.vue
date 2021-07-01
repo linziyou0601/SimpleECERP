@@ -45,6 +45,7 @@
                     :return-value.sync="month"
                     persistent
                     width="290px"
+                    @input="reload()"
                   >
                     <template #activator="{ on, attrs }">
                       <v-subheader>月份</v-subheader>
@@ -181,7 +182,7 @@
         <v-card-title>
           <span class="text-h5">
             {{ saleIndex > -1 ? '修改' : '新增'
-            }}{{ editingSale.type | fType }}單
+            }}{{ editingSale.type | fText }}單
           </span>
         </v-card-title>
         <v-card-text>
@@ -347,7 +348,7 @@ export default {
     ...mapGetters('merchandise', ['allMerchandises']),
     month: {
       get() {
-        return this.$store.state.purchase.month
+        return this.$store.state.sale.month
       },
       set(val) {
         this.setMonth(val)
@@ -355,7 +356,7 @@ export default {
     },
     monthSel: {
       get() {
-        return this.$store.state.purchase.monthSel
+        return this.$store.state.sale.monthSel
       },
       set(val) {
         this.setMonthSel(val)

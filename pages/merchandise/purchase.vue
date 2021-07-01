@@ -45,6 +45,7 @@
                     :return-value.sync="month"
                     persistent
                     width="290px"
+                    @input="reload()"
                   >
                     <template #activator="{ on, attrs }">
                       <v-subheader>月份</v-subheader>

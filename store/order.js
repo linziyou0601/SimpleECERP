@@ -1,6 +1,8 @@
 const state = () => ({
   _allOrders: [],
   _loadingOrder: false,
+  month: new Date().toISOString().substr(0, 7),
+  monthSel: false,
 })
 
 const getters = {
@@ -22,13 +24,13 @@ const actions = {
   processError({ commit, dispatch }, code) {
     if (code === 401 || code === 403) {
       commit('fireUnAuthAlertDialog', null, { root: true })
-      dispatch('logout', 'order', { root: true })
+      dispatch('logout', { redirect: 'order' }, { root: true })
     }
   },
-  getAllOrders({ commit, dispatch }) {
+  getAllOrders({ state, commit, dispatch }) {
     commit('setLoadingOrder', true)
     this.$axios
-      .$get('/api/order')
+      .$get('/api/order?month=' + state.month)
       .then(({ code, data }) => {
         if (code === 200) commit('setAllOrders', data)
       })
@@ -67,6 +69,12 @@ const mutations = {
   },
   setLoadingOrder(state, value) {
     state._loadingOrder = value
+  },
+  setMonth(state, value) {
+    state.month = value
+  },
+  setMonthSel(state, value) {
+    state.monthSel = value
   },
 }
 
