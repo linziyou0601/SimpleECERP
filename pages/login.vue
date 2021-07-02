@@ -35,6 +35,9 @@
             >
             <v-btn color="accent" @click="reset">清除</v-btn>
           </v-col>
+          <v-col class="d-flex justify-center pb-0" cols="12">
+            <v-btn color="primary" text to="/register">沒有帳號？去註冊</v-btn>
+          </v-col>
         </v-row>
       </v-card>
     </v-col>

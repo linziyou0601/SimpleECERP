@@ -370,7 +370,7 @@ export default {
       'deleteAdjustment',
     ]),
     ...mapActions('merchandise', ['getAllMerchandises']),
-    ...mapMutations('purchase', ['setMonth', 'setMonthSel']),
+    ...mapMutations('adjustment', ['setMonth', 'setMonthSel']),
     // 資料顯示
     getHint(field) {
       if (field === 'amount') return '此為數量變化值，正值為增加，負值為減少'

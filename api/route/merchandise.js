@@ -102,6 +102,7 @@ router.post('/', [jwtMiddleware, upload], async (req, res) => {
           create: {
             cost: 0,
             quantity: 0,
+            createdAt: '1970-01-01T00:00:00.000Z'
           },
         },
       },

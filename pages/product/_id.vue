@@ -95,7 +95,7 @@ import { mapGetters, mapActions } from 'vuex'
 export default {
   filters: {
     currency(price) {
-      return String(price).toLocaleString('zh-TW') + '元'
+      return (price || '').toLocaleString('zh-TW') + '元'
     },
   },
   data() {

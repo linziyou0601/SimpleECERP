@@ -131,7 +131,7 @@
         <v-card-text>
           <v-container>
             <v-row>
-              <v-col cols="10">
+              <v-col cols="12">
                 <v-text-field
                   v-model.trim="editingUser.account"
                   :disabled="userIndex > -1"

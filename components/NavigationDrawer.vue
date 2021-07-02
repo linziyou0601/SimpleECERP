@@ -103,6 +103,12 @@ export default {
           scope: ['admin'],
         },
         {
+          icon: 'mdi-chart-bar',
+          title: '報表',
+          to: '/report',
+          scope: ['admin'],
+        },
+        {
           icon: 'mdi-account-multiple',
           title: '會員管理',
           to: '/user',
@@ -119,7 +125,8 @@ export default {
   },
   methods: {
     scopeFlag(scope) {
-      return !scope.length || (this.user && scope.includes(this.user.scope))
+      const userScope = this.user ? this.user.scope : 'customer'
+      return !scope.length || (this.user && scope.includes(userScope))
     },
   },
 }

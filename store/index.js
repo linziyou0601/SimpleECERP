@@ -54,6 +54,18 @@ const actions = {
       }
     })
   },
+  register({ commit }, user) {
+    this.$axios.$post('/api/register', user).then(({ message, result }) => {
+      const alertDialog = { title: '', content: result }
+      if (message === 'ok') {
+        alertDialog.title = '註冊成功'
+        this.$router.push({ name: 'login' })
+      } else {
+        alertDialog.title = '註冊失敗'
+      }
+      commit('fireAlertDialog', alertDialog)
+    })
+  },
 }
 
 const mutations = {

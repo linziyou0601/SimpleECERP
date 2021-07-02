@@ -1,10 +1,11 @@
-const exceptRoutes = ['index', 'product-id']
+const exceptRoutes = ['index', 'register', 'product-id']
 const customerRoutes = [
   'index',
   'product-id',
   'cart',
   'myOrder',
   'login',
+  'register',
   'profile',
 ]
 export default function ({ app, store, redirect, route }) {
