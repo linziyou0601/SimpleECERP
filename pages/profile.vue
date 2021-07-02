@@ -163,7 +163,10 @@
           <span class="text-h5">上傳個人照片</span>
         </v-card-title>
         <v-card-text>
-          <v-container>
+          <v-container class="text-center">
+            <v-avatar class="mb-2" color="accent" size="128">
+              <v-img class="rounded-lg" :src="url" aspect-ratio="1"></v-img>
+            </v-avatar>
             <v-file-input
               v-model="avatarFile"
               :rules="[rules.validAvatar]"
@@ -171,9 +174,8 @@
               accept="image/png, image/jpeg, image/bmp"
               filled
               prepend-icon="mdi-camera"
-              @change="changeAvatar"
+              @change="changeAvater"
             ></v-file-input>
-            <v-img :src="url" />
           </v-container>
         </v-card-text>
         <v-card-actions>
@@ -202,6 +204,7 @@ export default {
       editingUser: {},
       birthSel: false,
       avatarFile: {},
+      url: '',
     }
   },
   computed: {
@@ -235,11 +238,6 @@ export default {
         },
       ]
     },
-    url() {
-      if (!this.avatarFile) return
-      return null
-      // URL.createObjectURL(this.avatarFile)
-    },
   },
   created() {
     const id = this.$store.getters.user.id
@@ -267,9 +265,6 @@ export default {
       this.reGetMe()
       this.close()
     },
-    changeAvatar() {
-      console.log(this.avatarFile)
-    },
     upload() {
       const formData = new FormData()
       formData.append('avatar', this.avatarFile)
@@ -277,6 +272,17 @@ export default {
       this.uploadAvatar(formData)
       this.reGetMe()
       this.close()
+    },
+    changeAvater() {
+      if (this.avatarFile) {
+        const reader = new FileReader()
+        reader.readAsDataURL(this.avatarFile)
+        reader.onload = () => {
+          this.url = reader.result
+        }
+      } else {
+        this.url = ''
+      }
     },
   },
 }

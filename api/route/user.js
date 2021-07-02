@@ -1,6 +1,8 @@
 import express from 'express'
 import multer from 'multer'
 import bcrypt from 'bcrypt'
+import path from 'path'
+import fs from 'fs'
 import prisma from '../prismaClient'
 import { jwtMiddleware } from '../jwt-middleware'
 
@@ -47,18 +49,25 @@ router.get('/profile', jwtMiddleware, async (req, res) => {
 
 router.post('/profile/avatar', [jwtMiddleware, upload], async (req, res) => {
   const id = parseInt(req.body.id)
-  const path = req.files[0].filename
+  const filename = req.files[0].filename
   let [message, result] = ['', '']
   try {
+    const user = await prisma.user.findFirst({
+      where: { id },
+    })
+    if (user.avatar){
+      fs.unlink(path.join(__dirname, '../../uploads', user.avatar), (err) => {})
+    }
     const avatarUpload = await prisma.user.update({ 
       where: { id },
       data: {
-        avatar: path,
+        avatar: filename,
       }
     })
     message = 'ok'
     result = avatarUpload
   } catch (exception) {
+    console.log(exception)
     message = 'failed'
     result = '上傳失敗'
   }
