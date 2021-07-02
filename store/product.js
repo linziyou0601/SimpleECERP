@@ -12,9 +12,10 @@ const getters = {
 
 const actions = {
   processError({ commit, dispatch }, { code, redirect, params }) {
-    commit('fireUnAuthAlertDialog', null, { root: true })
-    if (code === 401 || code === 403)
+    if (code === 401 || code === 403) {
+      commit('fireUnAuthAlertDialog', null, { root: true })
       dispatch('logout', { redirect, params }, { root: true })
+    }
   },
   getAllProducts({ commit, dispatch }) {
     commit('setLoadingProduct', true)
@@ -34,9 +35,16 @@ const actions = {
     commit('setLoadingProduct', true)
     this.$axios
       .$get('/api/merchandise/product?id=' + id)
-      .then(({ code, data }) => {
-        console.log(data)
-        if (code === 200) commit('setProduct', data)
+      .then(({ code, data, message }) => {
+        if (code === 200 && message === 'ok') commit('setProduct', data)
+        else {
+          commit(
+            'fireAlertDialog',
+            { title: '錯誤', content: data },
+            { root: true }
+          )
+          this.$router.push({ name: 'index' })
+        }
       })
       .catch(({ response, code = response.status || null }) => {
         dispatch('processError', {

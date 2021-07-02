@@ -20,9 +20,10 @@ const actions = {
     commit('fireAlertDialog', alertDialog, { root: true })
   },
   processError({ commit, dispatch }, code) {
-    commit('fireUnAuthAlertDialog', null, { root: true })
-    if (code === 401 || code === 403)
+    if (code === 401 || code === 403) {
+      commit('fireUnAuthAlertDialog', null, { root: true })
       dispatch('logout', { redirect: 'merchandise-manage' }, { root: true })
+    }
   },
   getAllMerchandises({ commit, dispatch }) {
     commit('setLoadingMerchandise', true)

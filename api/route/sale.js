@@ -18,7 +18,7 @@ function isValidData(data) {
   return !(data.amount <= 0 || data.unitPrice <= 0)
 }
 
-router.get('/', async (req, res) => {
+router.get('/', jwtMiddleware, async (req, res) => {
   const { startDate, endDate } = getDateRange(req.query.month)
   const sales = await prisma.sale.findMany({
     where: {
