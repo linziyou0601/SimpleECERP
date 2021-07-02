@@ -304,7 +304,7 @@
             <!-- 個人資料區 -->
             <v-list-item v-if="editingOrder.user" class="mt-5">
               <v-list-item-avatar color="grey darken-3">
-                <v-avatar color="accent" v-bind="attrs" v-on="on">
+                <v-avatar color="accent">
                   <span v-if="!editingOrder.user.avatar" class="text-h7">{{
                     editingOrder.user.name ? editingOrder.user.name[0] : ''
                   }}</span>
@@ -359,8 +359,13 @@
               v-for="(item, key) in editingOrder.orderItems"
               :key="key"
             >
-              <v-list-item-avatar color="grey darken-3">
-                <v-icon>mdi-image</v-icon>
+              <v-list-item-avatar color="grey darken-3" tile>
+                <v-icon v-if="!item.avatar">mdi-image</v-icon>
+                <v-img
+                  v-else
+                  :src="`http://localhost:3000/api/avatar?p=merchandise/${item.avatar}`"
+                  aspect-ratio="1"
+                ></v-img>
               </v-list-item-avatar>
               <v-list-item-content>
                 <v-list-item-title>{{ item.title }}</v-list-item-title>
@@ -640,6 +645,7 @@ export default {
           unit: it.merchandise.unit,
           amount: it.amount,
           price: it.price,
+          avatar: it.merchandise.avatar,
         }
       }
     },

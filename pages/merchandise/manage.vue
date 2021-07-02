@@ -171,6 +171,23 @@
                   hide-details
                 ></v-switch>
               </v-col>
+              <v-col cols="12" class="text-center">
+                <v-avatar class="mb-2" color="accent" size="128" tile>
+                  <v-img
+                    :src="editingMerchandise.avatar"
+                    aspect-ratio="1"
+                  ></v-img>
+                </v-avatar>
+                <v-file-input
+                  v-model="editingMerchandise.avatarFile"
+                  :rules="[rules.validAvatar]"
+                  label="選擇照片"
+                  accept="image/png, image/jpeg, image/bmp"
+                  filled
+                  prepend-icon="mdi-camera"
+                  @change="changeAvater"
+                ></v-file-input>
+              </v-col>
               <small>*為必填欄位</small>
             </v-row>
           </v-container>
@@ -262,6 +279,7 @@ export default {
       rules: {
         validNumber: (v) => v > 0 || '必須大於0',
         validNullString: (v) => !!v || '不能為空',
+        validAvatar: (v) => !v || v.size <= 2000000 || '圖片大小不能超過2MB!',
       },
       defaultDialog: false,
       deleteDialog: false,
@@ -270,6 +288,8 @@ export default {
         unit: '個',
         price: 0,
         on: true,
+        avatar: '',
+        avatarFile: {},
       },
       editingMerchandise: { ...this.defaultMerchandise },
       merchandiseIndex: -1,
@@ -308,16 +328,32 @@ export default {
       this.defaultDialog = true
       this.merchandiseIndex = item.id
       this.editingMerchandise = { ...item }
+      this.editingMerchandise.avatar = item.avatar
+        ? `http://localhost:3000/api/avatar?p=merchandise/${item.avatar}`
+        : ''
     },
     create() {
       this.defaultDialog = true
       this.editingMerchandise = { ...this.defaultMerchandise }
     },
     save() {
-      if (this.merchandiseIndex > -1)
-        this.updateMerchandise(this.editingMerchandise)
-      else this.createMerchandise(this.editingMerchandise)
+      const formData = new FormData()
+      for (const [key, value] of Object.entries(this.editingMerchandise))
+        formData.append(key, value)
+      if (this.merchandiseIndex > -1) this.updateMerchandise(formData)
+      else this.createMerchandise(formData)
       this.close()
+    },
+    changeAvater() {
+      if (this.editingMerchandise.avatarFile) {
+        const reader = new FileReader()
+        reader.readAsDataURL(this.editingMerchandise.avatarFile)
+        reader.onload = () => {
+          this.editingMerchandise.avatar = reader.result
+        }
+      } else {
+        this.editingMerchandise.avatar = ''
+      }
     },
   },
 }

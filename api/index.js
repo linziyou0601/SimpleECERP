@@ -1,8 +1,8 @@
+import path from 'path'
 import cookieParser from 'cookie-parser'
 import csrf from 'csurf'
 import express from 'express'
 import bcrypt from 'bcrypt'
-import path from 'path'
 import { getJWT } from './jwt'
 import prisma from './prismaClient'
 import merchandise from './route/merchandise'
@@ -61,7 +61,7 @@ app.post('/login', async (req, res) => {
   } else {
     const jwt = await getJWT(user)
     await prisma.user.update({ where: { id: user.id }, data: { token: jwt } })
-    delete user['password']
+    delete user.password
     res.send({
       code: 200,
       message: 'ok',

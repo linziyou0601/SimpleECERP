@@ -45,6 +45,7 @@ model Merchandise {
     unit        String    @default("個")
     price       Float     @default(0)
     on          Boolean   @default(true)
+    avatar      String?
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
     supplier    Supplier? @relation(fields: [supplierId], references: [id])

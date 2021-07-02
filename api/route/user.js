@@ -1,30 +1,35 @@
+import path from 'path'
+import fs from 'fs'
 import express from 'express'
 import multer from 'multer'
 import bcrypt from 'bcrypt'
-import path from 'path'
-import fs from 'fs'
 import prisma from '../prismaClient'
 import { jwtMiddleware } from '../jwt-middleware'
 
-const upload = multer({ 
+const upload = multer({
   dest: 'uploads/',
   fileFilter(req, file, cb) {
     if (!file.mimetype.match(/image\/(jpg|jpeg|png|bmp)$/))
       cb(new Error('Please upload an image'))
     cb(null, true)
-  }
+  },
 }).any()
 const router = express.Router()
 const saltRounds = 10
 
 function isValidData(data) {
-  return !(!data.account.match(/^[0-9a-z]+$/) || !data.name || !data.gender || !data.scope)
+  return !(
+    !data.account.match(/^[0-9a-z]+$/) ||
+    !data.name ||
+    !data.gender ||
+    !data.scope
+  )
 }
 
 /* profile區 */
 router.get('/profile', jwtMiddleware, async (req, res) => {
   const id = parseInt(req.query.id)
-  let profile = await prisma.user.findFirst({
+  const profile = await prisma.user.findFirst({
     where: { id },
     select: {
       id: true,
@@ -38,7 +43,7 @@ router.get('/profile', jwtMiddleware, async (req, res) => {
       scope: true,
       createdAt: true,
       updatedAt: true,
-    }
+    },
   })
   res.json({
     code: 200,
@@ -55,19 +60,18 @@ router.post('/profile/avatar', [jwtMiddleware, upload], async (req, res) => {
     const user = await prisma.user.findFirst({
       where: { id },
     })
-    if (user.avatar){
+    if (user.avatar) {
       fs.unlink(path.join(__dirname, '../../uploads', user.avatar), (err) => {})
     }
-    const avatarUpload = await prisma.user.update({ 
+    const avatarUpload = await prisma.user.update({
       where: { id },
       data: {
         avatar: filename,
-      }
+      },
     })
     message = 'ok'
     result = avatarUpload
   } catch (exception) {
-    console.log(exception)
     message = 'failed'
     result = '上傳失敗'
   }
@@ -78,10 +82,9 @@ router.post('/profile/avatar', [jwtMiddleware, upload], async (req, res) => {
   })
 })
 
-
 /* user區 */
 router.get('/', jwtMiddleware, async (req, res) => {
-  let users = await prisma.user.findMany({
+  const users = await prisma.user.findMany({
     select: {
       id: true,
       account: true,
@@ -94,7 +97,7 @@ router.get('/', jwtMiddleware, async (req, res) => {
       scope: true,
       createdAt: true,
       updatedAt: true,
-    }
+    },
   })
   res.json({
     code: 200,
@@ -107,11 +110,17 @@ router.post('/', jwtMiddleware, async (req, res) => {
   const data = req.body
   let [message, result] = ['', '']
   try {
-    if (!isValidData(data)) throw Error('資料格式不正確')
-    const users = await prisma.user.findFirst({ where: { account: data.account } })
+    if (!isValidData(data)) throw new Error('資料格式不正確')
+    const users = await prisma.user.findFirst({
+      where: { account: data.account },
+    })
     const accFlag = !users
-    const pwdFlag = !(!data.password || !data.passwordConfirm || data.passwordConfirm!==data.password)
-    if (!accFlag){
+    const pwdFlag = !(
+      !data.password ||
+      !data.passwordConfirm ||
+      data.passwordConfirm !== data.password
+    )
+    if (!accFlag) {
       message = 'failed'
       result = '該帳號已被使用'
     } else if (!pwdFlag) {
@@ -119,7 +128,7 @@ router.post('/', jwtMiddleware, async (req, res) => {
       result = '密碼不能為空或兩次輸入之密碼不一致'
     } else {
       const birthDate = !data.birth ? null : new Date(data.birth).toISOString()
-      const passwordHash = bcrypt.hashSync(data.password, saltRounds);
+      const passwordHash = bcrypt.hashSync(data.password, saltRounds)
       const userCreate = await prisma.user.create({
         data: {
           account: data.account,
@@ -150,7 +159,7 @@ router.put('/', jwtMiddleware, async (req, res) => {
   const data = req.body
   let [message, result] = ['', '']
   try {
-    if (!isValidData(data)) throw Error('資料格式不正確')
+    if (!isValidData(data)) throw new Error('資料格式不正確')
     const birthDate = !data.birth ? null : new Date(data.birth).toISOString()
     const userUpdate = await prisma.user.update({
       where: { id: data.id },

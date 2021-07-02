@@ -7,8 +7,15 @@
       max-width="200"
       :to="'/product/' + product.id"
     >
+      <v-skeleton-loader
+        v-if="!product.avatar"
+        v-bind="attrs"
+        type="image"
+        height="200px"
+      ></v-skeleton-loader>
       <v-img
-        src="https://cdn.vuetifyjs.com/images/cards/sunshine.jpg"
+        v-else
+        :src="`http://localhost:3000/api/avatar?p=merchandise/${product.avatar}`"
         height="200px"
       ></v-img>
 

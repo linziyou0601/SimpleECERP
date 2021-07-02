@@ -1,9 +1,16 @@
 <template>
   <v-row class="mx-sm-3 my-sm-3 align-self-start">
     <v-col cols="12" sm="4" md="6" lg="5" elevation="3">
-      <v-img
+      <v-skeleton-loader
+        v-if="!product.avatar"
         class="rounded-lg"
-        src="https://cdn.vuetifyjs.com/images/cards/sunshine.jpg"
+        v-bind="attrs"
+        type="image"
+      ></v-skeleton-loader>
+      <v-img
+        v-else
+        class="rounded-lg"
+        :src="`http://localhost:3000/api/avatar?p=merchandise/${product.avatar}`"
         aspect-ratio="1"
       ></v-img>
     </v-col>
