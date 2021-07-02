@@ -59,7 +59,13 @@
             <v-icon>mdi-plus</v-icon>
           </v-btn>
           <v-spacer />
-          <v-btn class="ml-5 px-2 px-sm-10" color="primary" rounded>
+          <v-btn
+            :disabled="quantity <= 0"
+            class="ml-5 px-2 px-sm-10"
+            color="primary"
+            rounded
+            @click="add"
+          >
             加入購物車
           </v-btn>
         </v-card-actions>
@@ -80,7 +86,6 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 export default {
-  auth: false,
   filters: {
     currency(price) {
       return String(price).toLocaleString('zh-TW') + '元'
@@ -93,6 +98,7 @@ export default {
     }
   },
   computed: {
+    ...mapGetters(['user', 'token']),
     ...mapGetters('product', ['product']),
     numberAlert() {
       return this.quantity >= 0 ? '' : '必須大於0'
@@ -105,6 +111,21 @@ export default {
   },
   methods: {
     ...mapActions('product', ['getProduct']),
+    ...mapActions('cart', ['getAllCarts', 'addToCart']),
+    add() {
+      const params = this.$route.params
+      if (!this.token) {
+        this.$cookies.set('redirect_to', 'product-id')
+        this.$cookies.set('params', params)
+        this.$router.push({ name: 'login' })
+      } else if (this.quantity > 0) {
+        this.addToCart({
+          userId: this.user.id,
+          merchandiseId: parseInt(params.id),
+          amount: this.quantity,
+        })
+      }
+    },
   },
 }
 </script>

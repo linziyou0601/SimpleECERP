@@ -82,11 +82,36 @@
               </v-col>
               <v-col cols="auto">
                 <v-row>
+                  <v-subheader>電話</v-subheader>
+                  <v-autocomplete
+                    v-model="filter.phones"
+                    :items="allPhones"
+                    type="search"
+                    item-text="title"
+                    item-value="title"
+                    hide-details="true"
+                    class="max-w-300 pt-0"
+                    multiple
+                    chips
+                  >
+                    <template #selection="{ item, index }">
+                      <v-chip v-if="index === 0"
+                        ><span>{{ item }}</span></v-chip
+                      >
+                      <span v-if="index === 1" class="grey--text text-caption">
+                        (與其他{{ filter.phones.length - 1 }}個)
+                      </span>
+                    </template>
+                  </v-autocomplete>
+                </v-row>
+              </v-col>
+              <v-col cols="auto">
+                <v-row>
                   <v-subheader>訂單狀態</v-subheader>
                   <v-select
                     v-model="filter.statuses"
                     :items="[
-                      { key: '訂單成立', value: 'created' },
+                      { key: '訂單已成立', value: 'created' },
                       { key: '訂單處理中', value: 'pending' },
                       { key: '商品已到貨', value: 'arrived' },
                       { key: '訂單完成', value: 'completed' },
@@ -107,7 +132,9 @@
 
         <!-- 資料格式定義 -->
         <template #[`item.status`]="{ item }">
-          {{ item.status | statusText }}
+          <span :class="item.status | fColor">
+            {{ item.status | statusText }}
+          </span>
         </template>
         <template #[`item.createdAt`]="{ item }">
           {{ new Date(item.createdAt).toLocaleString() }}
@@ -277,10 +304,17 @@
             <!-- 個人資料區 -->
             <v-list-item v-if="editingOrder.user" class="mt-5">
               <v-list-item-avatar color="grey darken-3">
-                <v-img
-                  class="elevation-6"
-                  src="https://avataaars.io/?avatarStyle=Transparent&topType=ShortHairShortCurly&accessoriesType=Prescription02&hairColor=Black&facialHairType=Blank&clotheType=Hoodie&clotheColor=White&eyeType=Default&eyebrowType=DefaultNatural&mouthType=Default&skinColor=Light"
-                ></v-img>
+                <v-avatar color="accent" v-bind="attrs" v-on="on">
+                  <span v-if="!editingOrder.user.avatar" class="text-h7">{{
+                    editingOrder.user.name ? editingOrder.user.name[0] : ''
+                  }}</span>
+                  <v-img
+                    v-if="editingOrder.user.avatar"
+                    class="rounded-lg"
+                    :src="`http://localhost:3000/api/avatar?p=${editingOrder.user.avatar}`"
+                    aspect-ratio="1"
+                  ></v-img>
+                </v-avatar>
               </v-list-item-avatar>
               <v-list-item-content>
                 <v-list-item-title>{{
@@ -416,8 +450,11 @@ export default {
     currency(price) {
       return price.toLocaleString('zh-TW') + '元'
     },
+    fColor(status) {
+      return status === 'canceled' ? 'error--text' : ''
+    },
     statusText(t) {
-      if (t === 'created') return '訂單成立'
+      if (t === 'created') return '訂單已成立'
       else if (t === 'pending') return '訂單處理中'
       else if (t === 'arrived') return '商品已到貨'
       else if (t === 'completed') return '訂單完成'
@@ -456,7 +493,14 @@ export default {
           },
         },
         { text: '訂購人', value: 'user.name' },
-        { text: '電話', value: 'user.phone' },
+        {
+          text: '電話',
+          value: 'user.phone',
+          filter: (value) => {
+            if (!this.filter.phones.length) return true
+            return this.filter.phones.includes(value)
+          },
+        },
         { text: '建立時間', value: 'createdAt' },
         { text: '更新時間', value: 'updatedAt' },
         { text: '操作', value: 'actions', sortable: false },
@@ -464,6 +508,7 @@ export default {
       ],
       filter: {
         statuses: [],
+        phones: [],
       },
       // 編輯資料表內容
       rules: {
@@ -492,6 +537,11 @@ export default {
     ...mapGetters('order', ['allOrders', 'loadingOrder']),
     ...mapGetters('merchandise', ['allMerchandises']),
     ...mapGetters('user', ['allUsers']),
+    allPhones() {
+      return Object.values(this.allOrders).map((od) => {
+        return od.user.phone
+      })
+    },
     month: {
       get() {
         return this.$store.state.order.month

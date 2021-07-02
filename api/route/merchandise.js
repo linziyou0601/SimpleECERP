@@ -15,7 +15,7 @@ function toBeCountOrder(order) {
 }
 
 /* product區 */
-router.get('/allProducts', jwtMiddleware, async (req, res) => {
+router.get('/allProducts', async (req, res) => {
   let merchandises = await prisma.merchandise.findMany({
     where: {
       on: true
@@ -28,21 +28,21 @@ router.get('/allProducts', jwtMiddleware, async (req, res) => {
   })
 })
 
-router.get('/product', jwtMiddleware, async (req, res) => {
+router.get('/product', async (req, res) => {
   const id = parseInt(req.query.id)
-  let merchandises = await prisma.merchandise.findFirst({
+  let mc = await prisma.merchandise.findFirst({
     where: { id }
   })
   res.json({
     code: 200,
-    message: 'ok',
-    data: merchandises,
+    message: (!mc || !mc.on) ? 'failed' : 'ok',
+    data: (!mc || !mc.on) ? '未經允許的存取' : mc,
   })
 })
 
 
 /* merchandise區 */
-router.get('/', async (req, res) => {
+router.get('/', jwtMiddleware, async (req, res) => {
   let merchandises = await prisma.merchandise.findMany({
     include: {
       orderDetail: {
@@ -67,7 +67,6 @@ router.get('/', async (req, res) => {
     rsl.unitCost = rsl.cost / rsl.quantity || 0
     delete rsl.inventory
     delete rsl.orderDetail
-    console.log(rsl)
     return rsl
   })
   res.json({
@@ -159,7 +158,6 @@ router.delete('/', jwtMiddleware, async (req, res) => {
       result = '該商品有進銷存等相關紀錄，請以下架取代刪除'
     }
   } catch (exception) {
-    console.log(exception)
     message = 'failed'
     result = '資料格式不正確'
   }

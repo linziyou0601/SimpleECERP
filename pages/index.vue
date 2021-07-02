@@ -26,7 +26,6 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 export default {
-  auth: false,
   data() {
     return {
       pageTitle: '首頁',
