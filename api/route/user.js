@@ -1,8 +1,17 @@
 import express from 'express'
+import multer from 'multer'
 import bcrypt from 'bcrypt'
 import prisma from '../prismaClient'
 import { jwtMiddleware } from '../jwt-middleware'
 
+const upload = multer({ 
+  dest: 'uploads/',
+  fileFilter(req, file, cb) {
+    if (!file.mimetype.match(/image\/(jpg|jpeg|png|bmp)$/))
+      cb(new Error('Please upload an image'))
+    cb(null, true)
+  }
+}).any()
 const router = express.Router()
 const saltRounds = 10
 
@@ -10,7 +19,59 @@ function isValidData(data) {
   return !(!data.account.match(/^[0-9a-z]+$/) || !data.name || !data.gender || !data.scope)
 }
 
-router.get('/', async (req, res) => {
+/* profile區 */
+router.get('/profile', jwtMiddleware, async (req, res) => {
+  const id = parseInt(req.query.id)
+  let profile = await prisma.user.findFirst({
+    where: { id },
+    select: {
+      id: true,
+      account: true,
+      name: true,
+      email: true,
+      phone: true,
+      gender: true,
+      birth: true,
+      avatar: true,
+      scope: true,
+      createdAt: true,
+      updatedAt: true,
+    }
+  })
+  res.json({
+    code: 200,
+    message: 'ok',
+    data: profile,
+  })
+})
+
+router.post('/profile/avatar', [jwtMiddleware, upload], async (req, res) => {
+  const id = parseInt(req.body.id)
+  const path = req.files[0].filename
+  let [message, result] = ['', '']
+  try {
+    const avatarUpload = await prisma.user.update({ 
+      where: { id },
+      data: {
+        avatar: path,
+      }
+    })
+    message = 'ok'
+    result = avatarUpload
+  } catch (exception) {
+    message = 'failed'
+    result = '上傳失敗'
+  }
+  res.json({
+    code: 200,
+    message,
+    result,
+  })
+})
+
+
+/* user區 */
+router.get('/', jwtMiddleware, async (req, res) => {
   let users = await prisma.user.findMany({
     select: {
       id: true,
@@ -20,6 +81,7 @@ router.get('/', async (req, res) => {
       phone: true,
       gender: true,
       birth: true,
+      avatar: true,
       scope: true,
       createdAt: true,
       updatedAt: true,

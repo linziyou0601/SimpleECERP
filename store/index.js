@@ -41,6 +41,19 @@ const actions = {
     commit('unsetAuth')
     this.$router.push({ name: 'login' })
   },
+  reGetMe({ commit, state }) {
+    const data = { token: state._token }
+    this.$axios.$post('/api/me', data).then((response) => {
+      if (response.message === 'ok') {
+        const auth = response.auth
+        commit('setAuth', auth)
+        commit('reloadAuth')
+      } else {
+        const data = response.data
+        commit('fireAlertDialog', { title: '錯誤', content: data })
+      }
+    })
+  },
 }
 
 const mutations = {

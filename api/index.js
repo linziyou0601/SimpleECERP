@@ -2,6 +2,7 @@ import cookieParser from 'cookie-parser'
 import csrf from 'csurf'
 import express from 'express'
 import bcrypt from 'bcrypt'
+import path from 'path'
 import { getJWT } from './jwt'
 import prisma from './prismaClient'
 import merchandise from './route/merchandise'
@@ -29,6 +30,11 @@ app.get('/csrf', function (req, res) {
   res.json({})
 })
 
+app.get('/avatar', function (req, res) {
+  const file = req.query.p
+  res.sendFile(file, { root: path.join(__dirname, '../uploads') })
+})
+
 app.post('/login', async (req, res) => {
   const { account, password } = req.body
   const user = await prisma.user.findFirst({
@@ -39,7 +45,9 @@ app.post('/login', async (req, res) => {
       id: true,
       password: true,
       account: true,
-      scope: true
+      name: true,
+      avatar: true,
+      scope: true,
     },
   })
   if (!user || !bcrypt.compareSync(password, user.password)) {
@@ -68,6 +76,36 @@ app.post('/logout', async (req, res) => {
     code: 200,
     message: 'ok',
   })
+})
+
+app.post('/me', async (req, res) => {
+  const { token } = req.body
+  const user = await prisma.user.findFirst({
+    where: {
+      token,
+    },
+    select: {
+      id: true,
+      password: true,
+      account: true,
+      name: true,
+      avatar: true,
+      scope: true,
+    },
+  })
+  if (!user) {
+    res.send({
+      code: 200,
+      message: 'failed',
+      data: '授權憑證過期或無效，請重新登入',
+    })
+  } else {
+    res.send({
+      code: 200,
+      message: 'ok',
+      auth: { token, user },
+    })
+  }
 })
 
 export default {
