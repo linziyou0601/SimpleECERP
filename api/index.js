@@ -11,6 +11,7 @@ import purchase from './route/purchase'
 import sale from './route/sale'
 import order from './route/order'
 import user from './route/user'
+import cart from './route/cart'
 
 const app = express()
 
@@ -24,6 +25,7 @@ app.use('/merchandise/purchase', purchase)
 app.use('/merchandise/sale', sale)
 app.use('/order', order)
 app.use('/user', user)
+app.use('/cart', cart)
 
 app.get('/csrf', function (req, res) {
   res.cookie('XSRF-TOKEN', req.csrfToken())

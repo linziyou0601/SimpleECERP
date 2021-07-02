@@ -22,6 +22,46 @@ function isValidNext(data) {
   return !(!nexts.includes(data.action))
 }
 
+router.get('/myOrder', jwtMiddleware, async (req, res) => {
+  const { startDate, endDate } = getDateRange(req.query.month)
+  const id = parseInt(req.query.id)
+  const orders = await prisma.order.findMany({
+    where: {
+      userId: id,
+      AND: [
+        {
+          createdAt: { gte: startDate },
+        },
+        {
+          createdAt: { lt: endDate },
+        },
+      ],
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          account: true,
+          name: true,
+          email: true,
+          phone: true,
+          avatar: true,
+        }
+      },
+      orderDetail: {
+        include: {
+          merchandise: true
+        }
+      },
+    },
+  })
+  res.json({
+    code: 200,
+    message: 'ok',
+    data: orders,
+  })
+})
+
 router.get('/', jwtMiddleware, async (req, res) => {
   const { startDate, endDate } = getDateRange(req.query.month)
   const orders = await prisma.order.findMany({
@@ -43,6 +83,7 @@ router.get('/', jwtMiddleware, async (req, res) => {
           name: true,
           email: true,
           phone: true,
+          avatar: true,
         }
       },
       orderDetail: {

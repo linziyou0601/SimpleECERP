@@ -27,6 +27,22 @@ const actions = {
       dispatch('logout', { redirect: 'order' }, { root: true })
     }
   },
+  getMyOrders({ rootState, state, commit, dispatch }) {
+    commit('setLoadingOrder', true)
+    this.$axios
+      .$get(
+        '/api/order/myOrder?id=' + rootState._user.id + '&month=' + state.month
+      )
+      .then(({ code, data }) => {
+        if (code === 200) commit('setAllOrders', data)
+      })
+      .catch(({ response, code = response.status || null }) => {
+        dispatch('processError', code)
+      })
+      .finally(() => {
+        commit('setLoadingOrder', false)
+      })
+  },
   getAllOrders({ state, commit, dispatch }) {
     commit('setLoadingOrder', true)
     this.$axios
