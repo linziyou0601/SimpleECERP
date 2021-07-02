@@ -22,7 +22,7 @@ function isValidNext(data) {
   return !(!nexts.includes(data.action))
 }
 
-router.get('/', async (req, res) => {
+router.get('/', jwtMiddleware, async (req, res) => {
   const { startDate, endDate } = getDateRange(req.query.month)
   const orders = await prisma.order.findMany({
     where: {
